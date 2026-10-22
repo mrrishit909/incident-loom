@@ -1,0 +1,297 @@
+{
+  "target": "https://mrrishit909.github.io/incident-loom/",
+  "status": "passed",
+  "passed": 48,
+  "failed": 0,
+  "skipped": 0,
+  "tests": [
+    {
+      "title": "incidents: list, loom, legend and headline; accessible, no overflow",
+      "project": "tablet-768",
+      "status": "passed",
+      "duration": 3562
+    },
+    {
+      "title": "timeline entry opens its events in the drawer; Escape closes it",
+      "project": "tablet-768",
+      "status": "passed",
+      "duration": 2604
+    },
+    {
+      "title": "hypotheses: show a reading and an alternative on the loom",
+      "project": "tablet-768",
+      "status": "passed",
+      "duration": 1151
+    },
+    {
+      "title": "graph view and entity focus",
+      "project": "tablet-768",
+      "status": "passed",
+      "duration": 735
+    },
+    {
+      "title": "incidents: list, loom, legend and headline; accessible, no overflow",
+      "project": "mobile-390",
+      "status": "passed",
+      "duration": 8753
+    },
+    {
+      "title": "an incident with a gap shows the frayed thread and lowered confidence",
+      "project": "tablet-768",
+      "status": "passed",
+      "duration": 1229
+    },
+    {
+      "title": "an evidence chip opens that event",
+      "project": "tablet-768",
+      "status": "passed",
+      "duration": 1388
+    },
+    {
+      "title": "sections: every section by link, back button restores",
+      "project": "tablet-768",
+      "status": "passed",
+      "duration": 766
+    },
+    {
+      "title": "timeline entry opens its events in the drawer; Escape closes it",
+      "project": "mobile-390",
+      "status": "passed",
+      "duration": 3091
+    },
+    {
+      "title": "timeline section: every event on entity threads, window controls",
+      "project": "tablet-768",
+      "status": "passed",
+      "duration": 1522
+    },
+    {
+      "title": "hypotheses: show a reading and an alternative on the loom",
+      "project": "mobile-390",
+      "status": "passed",
+      "duration": 1307
+    },
+    {
+      "title": "graph view and entity focus",
+      "project": "mobile-390",
+      "status": "passed",
+      "duration": 803
+    },
+    {
+      "title": "entities: filter by kind and name",
+      "project": "tablet-768",
+      "status": "passed",
+      "duration": 1360
+    },
+    {
+      "title": "an incident with a gap shows the frayed thread and lowered confidence",
+      "project": "mobile-390",
+      "status": "passed",
+      "duration": 1260
+    },
+    {
+      "title": "an evidence chip opens that event",
+      "project": "mobile-390",
+      "status": "passed",
+      "duration": 468
+    },
+    {
+      "title": "detectors: held-out synthetic metrics labelled as such",
+      "project": "tablet-768",
+      "status": "passed",
+      "duration": 1505
+    },
+    {
+      "title": "sections: every section by link, back button restores",
+      "project": "mobile-390",
+      "status": "passed",
+      "duration": 789
+    },
+    {
+      "title": "timeline section: every event on entity threads, window controls",
+      "project": "mobile-390",
+      "status": "passed",
+      "duration": 1564
+    },
+    {
+      "title": "replay and ingest: checkpoint states, accounting identity, quarantine, gaps",
+      "project": "tablet-768",
+      "status": "passed",
+      "duration": 2654
+    },
+    {
+      "title": "entities: filter by kind and name",
+      "project": "mobile-390",
+      "status": "passed",
+      "duration": 1213
+    },
+    {
+      "title": "keyboard: skip link and visible focus",
+      "project": "tablet-768",
+      "status": "passed",
+      "duration": 1255
+    },
+    {
+      "title": "detectors: held-out synthetic metrics labelled as such",
+      "project": "mobile-390",
+      "status": "passed",
+      "duration": 1349
+    },
+    {
+      "title": "light theme: the theme control applies and stays accessible",
+      "project": "tablet-768",
+      "status": "passed",
+      "duration": 2643
+    },
+    {
+      "title": "reduced motion: no running animations, loom complete",
+      "project": "tablet-768",
+      "status": "passed",
+      "duration": 426
+    },
+    {
+      "title": "replay and ingest: checkpoint states, accounting identity, quarantine, gaps",
+      "project": "mobile-390",
+      "status": "passed",
+      "duration": 2576
+    },
+    {
+      "title": "keyboard: skip link and visible focus",
+      "project": "mobile-390",
+      "status": "passed",
+      "duration": 1354
+    },
+    {
+      "title": "states: loading, empty, error with retry, stale",
+      "project": "tablet-768",
+      "status": "passed",
+      "duration": 2376
+    },
+    {
+      "title": "pages: runs ledger, request form link, about, preview image",
+      "project": "tablet-768",
+      "status": "passed",
+      "duration": 1079
+    },
+    {
+      "title": "light theme: the theme control applies and stays accessible",
+      "project": "mobile-390",
+      "status": "passed",
+      "duration": 2863
+    },
+    {
+      "title": "reduced motion: no running animations, loom complete",
+      "project": "mobile-390",
+      "status": "passed",
+      "duration": 450
+    },
+    {
+      "title": "incidents: list, loom, legend and headline; accessible, no overflow",
+      "project": "desktop-1440",
+      "status": "passed",
+      "duration": 3581
+    },
+    {
+      "title": "states: loading, empty, error with retry, stale",
+      "project": "mobile-390",
+      "status": "passed",
+      "duration": 2721
+    },
+    {
+      "title": "pages: runs ledger, request form link, about, preview image",
+      "project": "mobile-390",
+      "status": "passed",
+      "duration": 1957
+    },
+    {
+      "title": "timeline entry opens its events in the drawer; Escape closes it",
+      "project": "desktop-1440",
+      "status": "passed",
+      "duration": 3161
+    },
+    {
+      "title": "hypotheses: show a reading and an alternative on the loom",
+      "project": "desktop-1440",
+      "status": "passed",
+      "duration": 1307
+    },
+    {
+      "title": "graph view and entity focus",
+      "project": "desktop-1440",
+      "status": "passed",
+      "duration": 657
+    },
+    {
+      "title": "an incident with a gap shows the frayed thread and lowered confidence",
+      "project": "desktop-1440",
+      "status": "passed",
+      "duration": 1207
+    },
+    {
+      "title": "an evidence chip opens that event",
+      "project": "desktop-1440",
+      "status": "passed",
+      "duration": 484
+    },
+    {
+      "title": "sections: every section by link, back button restores",
+      "project": "desktop-1440",
+      "status": "passed",
+      "duration": 668
+    },
+    {
+      "title": "timeline section: every event on entity threads, window controls",
+      "project": "desktop-1440",
+      "status": "passed",
+      "duration": 2064
+    },
+    {
+      "title": "entities: filter by kind and name",
+      "project": "desktop-1440",
+      "status": "passed",
+      "duration": 1038
+    },
+    {
+      "title": "detectors: held-out synthetic metrics labelled as such",
+      "project": "desktop-1440",
+      "status": "passed",
+      "duration": 1200
+    },
+    {
+      "title": "replay and ingest: checkpoint states, accounting identity, quarantine, gaps",
+      "project": "desktop-1440",
+      "status": "passed",
+      "duration": 2050
+    },
+    {
+      "title": "keyboard: skip link and visible focus",
+      "project": "desktop-1440",
+      "status": "passed",
+      "duration": 1243
+    },
+    {
+      "title": "light theme: the theme control applies and stays accessible",
+      "project": "desktop-1440",
+      "status": "passed",
+      "duration": 2414
+    },
+    {
+      "title": "reduced motion: no running animations, loom complete",
+      "project": "desktop-1440",
+      "status": "passed",
+      "duration": 340
+    },
+    {
+      "title": "states: loading, empty, error with retry, stale",
+      "project": "desktop-1440",
+      "status": "passed",
+      "duration": 2560
+    },
+    {
+      "title": "pages: runs ledger, request form link, about, preview image",
+      "project": "desktop-1440",
+      "status": "passed",
+      "duration": 1055
+    }
+  ]
+}
