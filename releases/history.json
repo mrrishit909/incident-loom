@@ -1,6 +1,13 @@
 {
   "releases": [
     {
+      "created_at": "2026-10-22T09:14:31Z",
+      "release_id": "incident-loom-20261022T091431Z-ec50738",
+      "run_id": "incident-loom-20261022T060048Z-3f1a6d6b-a1",
+      "source_commit": "ec507386dc0e5f60fd05e8c10c4d6ce534c2b1e2",
+      "status": "released"
+    },
+    {
       "created_at": "2026-10-22T08:22:01Z",
       "release_id": "incident-loom-20261022T082201Z-d7c707d",
       "run_id": "incident-loom-20261022T060048Z-3f1a6d6b-a1",
