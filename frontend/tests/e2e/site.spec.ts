@@ -135,6 +135,17 @@ test("sections: every section by link, back button restores", async ({ page }) =
   expect(problems).toEqual([]);
 });
 
+test("sections: a link followed before the run loads still moves focus to the heading", async ({ page }) => {
+  let release: () => void = () => {};
+  const gate = new Promise<void>((r) => (release = r));
+  await page.route("**/data/runs/*/summary.json", async (route) => { await gate; await route.continue(); });
+  await page.goto("./");
+  await page.getByRole("navigation", { name: "Sections" }).getByRole("link", { name: "Detectors" }).click();
+  await expect(page).toHaveURL(/#\/detectors$/);
+  release();
+  await expect(page.locator("[data-section-heading]")).toBeFocused();
+});
+
 test("timeline section: every event on entity threads, window controls", async ({ page }) => {
   await page.goto("./#/timeline");
   await expect(page.locator(".il-runloom .il-tickmark").first()).toBeAttached();

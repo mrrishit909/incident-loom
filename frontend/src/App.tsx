@@ -74,6 +74,7 @@ export function IncidentLoomApp(props: Partial<AppConfig>) {
   const [selection, setSelection] = useState<Selection>(null);
   const body = useRef<HTMLDivElement>(null);
   const prev = useRef<string | null>(null);
+  const pendingFocus = useRef(false);
 
   const latest = state.status === "ready" ? state.data.snapshot.latest_run_id : null;
   const runId = route.view === "run" ? route.runId ?? latest : null;
@@ -103,8 +104,17 @@ export function IncidentLoomApp(props: Partial<AppConfig>) {
     if (!key || before === null || before === key || (before.endsWith(":") && before.split(":")[0] === section)) return;
     const dir = SECTIONS.findIndex((s) => s.id === section) >= SECTIONS.findIndex((s) => s.id === before.split(":")[0]) ? 1 : -1;
     animate(body.current, [{ opacity: 0, transform: `translateX(${dir * 12}px)` }, { opacity: 1, transform: "none" }], { duration: 200 });
-    body.current?.querySelector<HTMLElement>("[data-incident-heading], [data-section-heading]")?.focus({ preventScroll: true });
+    pendingFocus.current = true;
   }, [section, incidentId, route.view]);
+
+  // A navigation made before the run finished loading still moves focus, once the heading exists.
+  useEffect(() => {
+    if (!pendingFocus.current) return;
+    const heading = body.current?.querySelector<HTMLElement>("[data-incident-heading], [data-section-heading]");
+    if (!heading) return;
+    pendingFocus.current = false;
+    heading.focus({ preventScroll: true });
+  });
 
   const onClick = (e: MouseEvent<HTMLDivElement>) => {
     const a = (e.target as HTMLElement).closest("a");
