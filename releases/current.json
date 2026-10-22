@@ -1,0 +1,105 @@
+{
+  "blocked_reason": null,
+  "created_at": "2026-10-22T04:58:55Z",
+  "defect_batch_id": null,
+  "evidence_dir": "outcomes/incident-loom-20261022T045855Z-dc0fd61/",
+  "findings": [
+    {
+      "detail": "sha256:3cc634c64218ce2172f3379777e71817c9f17d316e90a3b209d3d1c10a0c42f3",
+      "evidence_paths": [],
+      "id": "rubric-integrity",
+      "kind": "integrity",
+      "objective": true,
+      "seconds": 0.0,
+      "status": "pass",
+      "title": "Rubric matches its review lock"
+    },
+    {
+      "detail": ".......                                                                  [100%]",
+      "evidence_paths": [
+        "investigation-gates.junit.xml",
+        "investigation-gates.log"
+      ],
+      "id": "investigation-gates",
+      "kind": "pytest",
+      "objective": true,
+      "seconds": 9.22,
+      "status": "pass",
+      "title": "Every factual claim links to source events; causality never asserted from time proximity alone; deterministic replay; restart never duplicates events; detector metrics on held-out labelled fixtures only; synthetic performance labelled synthetic; missing logs produce uncertainty, not fabricated evidence"
+    },
+    {
+      "detail": ".............................                                            [100%]",
+      "evidence_paths": [
+        "harness.junit.xml",
+        "harness.log"
+      ],
+      "id": "harness",
+      "kind": "pytest",
+      "objective": true,
+      "seconds": 2.39,
+      "status": "pass",
+      "title": "State machine, idempotency, concurrency, intake authorization, outcome and memory guards"
+    },
+    {
+      "detail": "secret scan: 0 finding(s)",
+      "evidence_paths": [
+        "secret-scan.log"
+      ],
+      "id": "secret-scan",
+      "kind": "command",
+      "objective": true,
+      "seconds": 0.5,
+      "status": "pass",
+      "title": "No credentials in the repository or in the live site's shipped assets"
+    },
+    {
+      "detail": "live site and snapshot reachable; snapshot matches state",
+      "evidence_paths": [
+        "live-site.json"
+      ],
+      "id": "live-site",
+      "kind": "live",
+      "objective": true,
+      "seconds": 0.17,
+      "status": "pass",
+      "title": "Live Pages site loads and its data snapshot points at the state branch's latest run"
+    },
+    {
+      "detail": "checked 15 published files for incident-loom-20261022T045518Z-18e172c7-a1; mismatches: none",
+      "evidence_paths": [
+        "published-matches-state.log"
+      ],
+      "id": "published-matches-state",
+      "kind": "command",
+      "objective": true,
+      "seconds": 1.6,
+      "status": "pass",
+      "title": "Published result files are byte-identical to the accepted computation"
+    },
+    {
+      "detail": "48 passed, 0 failed",
+      "evidence_paths": [
+        "e2e/summary.json"
+      ],
+      "id": "browser",
+      "kind": "evidence-file",
+      "objective": true,
+      "seconds": 0.0,
+      "status": "pass",
+      "title": "Live-site browser checks at 390, 768 and 1440 px (incident list, loom, drawer, hypotheses and alternatives, graph, gaps, evidence chips, sections, whole-run timeline, entities, detectors, replay and ingest, keyboard, light theme, reduced motion, states, preview image, axe, overflow, console)"
+    }
+  ],
+  "project": "incident-loom",
+  "release_id": "incident-loom-20261022T045855Z-dc0fd61",
+  "repair_round": 0,
+  "rubric_sha256": "sha256:3cc634c64218ce2172f3379777e71817c9f17d316e90a3b209d3d1c10a0c42f3",
+  "run_id": "incident-loom-20261022T045518Z-18e172c7-a1",
+  "source_commit": "dc0fd61f5c56019d91e0ece369fa9be3aab44021",
+  "status": "released",
+  "subjective": {
+    "reason": "inference credentials are not configured for this repository",
+    "scores": [],
+    "status": "not_run"
+  },
+  "workflow_run_url": "https://github.com/mrrishit909/incident-loom/actions/runs/39725045777"
+}
