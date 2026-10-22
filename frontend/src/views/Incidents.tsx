@@ -133,7 +133,7 @@ export function IncidentView({ run, incident, select, selection, onEvent }: {
         {gaps.length > 0 && (
           <ul className="il-gaps" aria-label="Evidence gaps in this incident">
             {gaps.map((g) => (
-              <li key={g.gap_id}><Icon name="warn" /> <strong>{g.source}</strong> {g.kind === "declared" ? "declared a gap" : "went silent"} {utc(g.start_utc).slice(5, 16)} to {utc(g.end_utc).slice(11, 16)} UTC ({g.duration_minutes} min). {g.reason}</li>
+              <li key={g.gap_id}><Icon name="warn" /> <strong>{g.source}</strong> {g.kind === "declared" ? "declared a gap" : g.kind === "uncovered" ? "has no records at all" : "went silent"} {utc(g.start_utc).slice(5, 16)} to {utc(g.end_utc).slice(11, 16)} UTC ({g.duration_minutes} min). {g.reason}</li>
             ))}
           </ul>
         )}

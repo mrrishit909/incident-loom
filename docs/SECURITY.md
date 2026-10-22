@@ -49,8 +49,10 @@
 ## Publication
 
 - Only allow-listed result files of completed runs are copied into the Pages snapshot
-  (`project_hooks.PUBLIC_FILES`). Quarantined records are published as redacted excerpts
-  (token-like values are masked).
+  (`project_hooks.PUBLIC_FILES`). One redactor masks secret-like values (sensitive field names,
+  key=value and JSON-field secrets, Bearer and Basic headers, JWT-like and AWS-key-like strings) in
+  quarantine excerpts and in every published event detail; an event lists which fields were
+  redacted. Event ids are derived from the raw record before redaction, so replay still verifies.
 - All events, users, hosts, addresses, resources and labels are synthetic, for a fictional
   organisation, using documentation address ranges and the `.example` domain, and are labelled as such.
 - Reports contain no logs, environment dumps or personal data. Run records name the GitHub

@@ -85,7 +85,7 @@ export interface Incident {
 
 export interface Gap {
   gap_id: string;
-  kind: "declared" | "silent";
+  kind: "declared" | "silent" | "uncovered";
   source: string;
   batch: string;
   start_utc: string;

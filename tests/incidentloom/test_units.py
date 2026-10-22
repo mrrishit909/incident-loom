@@ -86,7 +86,8 @@ def test_malformed_records_are_quarantined_with_reasons_and_redacted():
     for batch in BATCH_IDS:
         ingest.ingest_batch(state, batch)
     q = state["quarantine"]
-    assert {r["reason"] for r in q} == set(ingest.REASONS)
+    assert {r["reason"] for r in q} == {"parse_error", "wrong_field_count", "missing_required_field",
+                                         "invalid_timestamp"} and {r["reason"] for r in q} <= set(ingest.REASONS)
     by_detail = {r["detail"] for r in q}
     assert "required field user is missing or empty" in by_detail
     assert "required field eventTime is missing or empty" in by_detail
@@ -308,13 +309,15 @@ def test_no_entity_edge_is_causal(full_run):
             return doc
         return edit
 
+    checks_order = [c["check"] for c in load(full_run, "checks.json")["checks"]]
     for kind, check in (("causal", "causal_links_verified"), ("wrong-entity", "attribution_edges_name_their_entity")):
         bad = copy_run(full_run, scratch(f"entity-edge-{kind}"))
         rewrite(bad, "correlations.json", mutate(kind))
         assert outputs.validate(bad), kind  # the schema rejects a causal entity edge; the check catches both
         docs = {n: load(bad, n) for n in outputs.EVIDENCE_FILES if n != "checks.json"}
         result = outputs.run_checks(docs, {n: (bad / n).read_bytes() for n in outputs.EVIDENCE_FILES})
-        assert [c["check"] for c in result["checks"] if not c["passed"]] == [check], kind
+        assert [c["check"] for c in result["checks"] if not c["passed"]] == sorted([check, "outputs_rederived"],
+                                                                                 key=checks_order.index), kind
 
 
 # ---- reproducibility, hygiene -------------------------------------------------------------------------

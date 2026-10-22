@@ -10,7 +10,7 @@ from typing import Any
 from jsonschema import Draft202012Validator
 
 from . import __version__
-from .ingest import InputError, ingest_batch, load_checkpoint, new_state, save_checkpoint, state_digest
+from .ingest import InputError, batch_summary, ingest_batch, load_checkpoint, new_state, save_checkpoint, state_digest
 from .outputs import EVIDENCE_FILES, render_evidence
 from .util import BATCH_IDS, FIXTURES, SCHEMAS, dumps, jbytes, sha256
 
@@ -26,7 +26,9 @@ def request_problems(params: dict[str, Any]) -> list[str]:
             f"batches must be a contiguous run starting at {BATCH_IDS[0]}, in order (for example {list(BATCH_IDS[:2])})"
         )
     restart = params.get("simulate_restart_after", 0)
-    if isinstance(restart, int) and restart and restart >= len(batches):
+    if isinstance(restart, bool) or not isinstance(restart, int):  # JSON Schema accepts 3.0 as an integer
+        problems.append("simulate_restart_after must be a whole number written without a decimal point")
+    elif restart and restart >= len(batches):
         problems.append(
             f"simulate_restart_after must be less than the number of batches ({len(batches)}) when non-zero"
         )
@@ -51,15 +53,8 @@ def ingest_all(
     per_batch, restart = [], None
     for n, batch in enumerate(batches, 1):
         ingest_batch(state, batch)
-        digest = state_digest(state)
-        per_batch.append(
-            {
-                "after_batch": batch,
-                "events_total": len(state["events"]),
-                "quarantined_total": len(state["quarantine"]),
-                "state_sha256": digest,
-            }
-        )
+        per_batch.append(batch_summary(state, batch))
+        digest = per_batch[-1]["state_sha256"]
         ckpt_sha = save_checkpoint(state, per_batch, workdir / "checkpoint.json") if workdir else None
         if n == restart_after:
             assert workdir is not None

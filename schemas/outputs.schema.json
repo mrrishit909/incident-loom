@@ -135,7 +135,7 @@
     },
     "ingest.json": {
       "type": "object",
-      "required": ["synthetic", "clock_skew_correction", "batches", "totals", "quarantined_by_reason", "rules"],
+      "required": ["synthetic", "clock_skew_correction", "batches", "totals", "quarantined_by_reason", "rules", "conflicts"],
       "properties": {
         "synthetic": {"const": true},
         "clock_skew_correction": {"enum": ["on", "off"]},
@@ -166,7 +166,12 @@
         },
         "totals": {"type": "object", "required": ["received", "accepted", "duplicates_exact", "duplicates_redelivered", "out_of_order", "quarantined"]},
         "quarantined_by_reason": {"type": "object", "additionalProperties": {"type": "integer"}},
-        "rules": {"type": "object"}
+        "rules": {"type": "object"},
+        "conflicts": {
+          "description": "deliveries that reused an ingested record id with different content; each is also a quarantine record with reason conflicting_redelivery",
+          "type": "array",
+          "items": {"type": "object", "required": ["quarantine_id", "batch", "source", "raw_ref", "conflicts_with", "conflicting_fields"]}
+        }
       }
     },
     "events.json": {
@@ -194,7 +199,9 @@
             "properties": {
               "quarantine_id": {"type": "string", "pattern": "^q-[0-9a-f]{16}$"},
               "batch": {"type": "string"}, "source": {"$ref": "#/$defs/source"}, "raw_ref": {"$ref": "#/$defs/rawRef"},
-              "reason": {"enum": ["parse_error", "wrong_field_count", "missing_required_field", "invalid_timestamp"]},
+              "reason": {"enum": ["parse_error", "wrong_field_count", "missing_required_field", "invalid_timestamp", "invalid_field", "outside_batch_window", "conflicting_redelivery"]},
+              "conflicts_with": {"description": "conflicting_redelivery only: the event id already ingested with different content", "$ref": "#/$defs/eventId"},
+              "conflicting_fields": {"description": "conflicting_redelivery only: the normalized fields that differ", "type": "array", "items": {"type": "string"}},
               "detail": {"type": "string"},
               "excerpt": {"description": "first 160 printable ASCII characters with token/password/secret/key/auth values replaced by [REDACTED]", "type": "string", "maxLength": 160}
             }
@@ -339,7 +346,7 @@
             "required": ["gap_id", "kind", "source", "batch", "start_utc", "end_utc", "duration_minutes", "reason", "affected_entities", "bounding_event_ids", "events_inside_window", "incident_ids", "hypothesis_refs"],
             "properties": {
               "gap_id": {"type": "string", "pattern": "^gap-[0-9a-f]{10}$"},
-              "kind": {"description": "declared: listed in a batch manifest; silent: no records longer than the threshold inside declared coverage", "enum": ["declared", "silent"]},
+              "kind": {"description": "declared: listed in a batch manifest; silent: no records longer than the threshold inside declared coverage (minus any declared gap); uncovered: a known source has no coverage while other sources do, e.g. it is missing from a batch manifest", "enum": ["declared", "silent", "uncovered"]},
               "source": {"$ref": "#/$defs/source"}, "batch": {"type": "string"},
               "start_utc": {"$ref": "#/$defs/utc"}, "end_utc": {"$ref": "#/$defs/utc"}, "duration_minutes": {"type": "integer"},
               "reason": {"type": "string"},

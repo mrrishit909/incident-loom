@@ -11,7 +11,7 @@ from collections import defaultdict
 from typing import Any
 
 from .ingest import distance_km
-from .util import MINUTE, iso_ms, short_hash
+from .util import MINUTE, data, iso_ms, short_hash
 
 THRESHOLDS: dict[str, dict[str, int]] = {
     "password_spray": {"window_minutes": 30, "min_distinct_users": 5},
@@ -189,7 +189,7 @@ def password_spray(evs: list[dict[str, Any]]) -> list[dict[str, Any]]:
             ]
             users = {x["actor"] for x in cl}
             summary = (
-                f"{len(cl)} failed sign-ins against {len(users)} distinct accounts from ip:{ip} between "
+                f"{len(cl)} failed sign-ins against {len(users)} distinct accounts from {data('ip:' + ip)} between "
                 f"{hm(start)} and {hm(end)} UTC; up to {best} distinct accounts inside one "
                 f"{th['window_minutes']}-minute window; {len(wins)} successful sign-ins from that address "
                 f"in the same period"
@@ -252,12 +252,14 @@ def brute_force_success(evs: list[dict[str, Any]]) -> list[dict[str, Any]]:
     out = []
     for burst, ok in hits:
         ips = {f["src_ip"] for f in burst}
-        where = ok["target"] if ok["source"] == "host_auth" else "the identity provider"
+        failed_on = sorted({str(f["target"]) for f in burst})
+        where = ", ".join(data(t) for t in failed_on) if ok["source"] == "host_auth" else "the identity provider"
+        elsewhere = "" if ok["source"] != "host_auth" or failed_on == [ok["target"]] else f" on {data(ok['target'])}"
         gap = ok["corrected_ms"] - burst[-1]["corrected_ms"]
         summary = (
-            f"{len(burst)} failed sign-ins for {ok['actor']} on {where} between {hm(burst[0]['corrected_ms'])} "
+            f"{len(burst)} failed sign-ins for {data(ok['actor'])} on {where} between {hm(burst[0]['corrected_ms'])} "
             f"and {hm(burst[-1]['corrected_ms'])} UTC, followed {gap // 1000} s after the last failure by a "
-            f"successful sign-in from ip:{ok['src_ip']}"
+            f"successful sign-in{elsewhere} from {data('ip:' + str(ok['src_ip']))}"
             + (" (an address used by the failures)" if ok["src_ip"] in ips else "")
         )
         related = {f"ip:{i}" for i in ips | {ok["src_ip"]}} | ({ok["target"]} if ok["source"] == "host_auth" else set())
@@ -301,9 +303,9 @@ def mfa_fatigue(evs: list[dict[str, Any]]) -> list[dict[str, Any]]:
             and e["session_id"] == ok["session_id"]
         ]
         summary = (
-            f"{len(burst)} rejected or unanswered MFA pushes for {ok['actor']} between "
+            f"{len(burst)} rejected or unanswered MFA pushes for {data(ok['actor'])} between "
             f"{hm(burst[0]['corrected_ms'])} and {hm(burst[-1]['corrected_ms'])} UTC, then an approved push at "
-            f"{hm(ok['corrected_ms'])} UTC for a sign-in from ip:{ok['src_ip']}"
+            f"{hm(ok['corrected_ms'])} UTC for a sign-in from {data('ip:' + str(ok['src_ip']))}"
         )
         out.append(
             make(
@@ -341,8 +343,9 @@ def impossible_travel(evs: list[dict[str, Any]]) -> list[dict[str, Any]]:
                 continue
             kmh = km * 3_600_000 // max(dt, 1)
             summary = (
-                f"Successful sign-ins for {user} from {a['geo']} (ip:{a['src_ip']}) at {hm(a['corrected_ms'])} "
-                f"and from {b['geo']} (ip:{b['src_ip']}) at {hm(b['corrected_ms'])} UTC: {km} km in "
+                f"Successful sign-ins for {data(user)} from {a['geo']} ({data('ip:' + a['src_ip'])}) at "
+                f"{hm(a['corrected_ms'])} and from {b['geo']} ({data('ip:' + b['src_ip'])}) at {hm(b['corrected_ms'])} "
+                f"UTC: {km} km in "
                 f"{dt // MINUTE} min, about {kmh} km/h against a plausible limit of "
                 f"{th['max_plausible_kmh']} km/h"
             )
@@ -414,14 +417,14 @@ def privilege_after_anomalous_signin(evs: list[dict[str, Any]], prior: list[dict
     for key in sorted(groups):
         ps = groups[key]
         when, strong, kind, anchor, det_id = chosen[key]
-        actions = ", ".join(sorted({p["action"] for p in ps}))
+        actions = ", ".join(sorted({data(p["action"]) for p in ps}))
         what = (
             f"a {kind.replace('_', ' ')} detection"
             if strong
             else f"a first sign-in from {anchor['geo']}, a country not seen for this account before"
         )
         summary = (
-            f"{len(ps)} privilege change(s) by {key[0]} ({actions}) within "
+            f"{len(ps)} privilege change(s) by {data(key[0])} ({actions}) within "
             f"{(ps[-1]['corrected_ms'] - when) // MINUTE} min after {what} at {hm(when)} UTC"
         )
         related = {p["target"] for p in ps} | {f"ip:{anchor['src_ip']}"}
@@ -463,7 +466,8 @@ def public_exposure_after_anomaly(evs: list[dict[str, Any]], prior: list[dict[st
         d = max(cands, key=lambda c: (key_event(c, by_id)["corrected_ms"], c["detection_id"]))
         k = key_event(d, by_id)
         summary = (
-            f"{x['actor']} opened {x['target']} to the public ({x['action']}) at {hm(x['corrected_ms'])} UTC, "
+            f"{data(x['actor'])} opened {data(x['target'])} to the public ({data(x['action'])}) at "
+            f"{hm(x['corrected_ms'])} UTC, "
             f"{(x['corrected_ms'] - k['corrected_ms']) // MINUTE} min after the {d['detector'].replace('_', ' ')} "
             f"detection {d['detection_id']}"
         )
@@ -509,9 +513,10 @@ def mass_download_after_exposure(evs: list[dict[str, Any]]) -> list[dict[str, An
                 continue
             total = sum(r["details"].get("bytes", 0) for r in reads)
             summary = (
-                f"{len(reads)} reads ({total // 1_000_000} MB) of {x['target']} by {who} from ip:{ip} between "
+                f"{len(reads)} reads ({total // 1_000_000} MB) of {data(x['target'])} by {data(who)} from "
+                f"{data('ip:' + ip)} between "
                 f"{hm(reads[0]['corrected_ms'])} and {hm(reads[-1]['corrected_ms'])} UTC, starting "
-                f"{(reads[0]['corrected_ms'] - x['corrected_ms']) // MINUTE} min after {x['actor']} made it "
+                f"{(reads[0]['corrected_ms'] - x['corrected_ms']) // MINUTE} min after {data(x['actor'])} made it "
                 f"public at {hm(x['corrected_ms'])} UTC"
             )
             out.append(
@@ -538,8 +543,8 @@ def logging_disabled(evs: list[dict[str, Any]]) -> list[dict[str, Any]]:
         if e["action"] in ("logging.trail.stop", "logging.trail.delete") and e["outcome"] == "success":
             cred = e["details"].get("credential")
             summary = (
-                f"{e['actor']} ran {e['action']} on {e['target']} at {hm(e['corrected_ms'])} UTC from "
-                f"ip:{e['src_ip']}" + (f" with credential {cred}" if cred else "")
+                f"{data(e['actor'])} ran {data(e['action'])} on {data(e['target'])} at {hm(e['corrected_ms'])} UTC "
+                f"from {data('ip:' + str(e['src_ip']))}" + (f" with credential {data(cred)}" if cred else "")
             )
             out.append(make("logging_disabled", [e], e["actor"], summary, {"action": e["action"]}, {e["target"]}))
     return out

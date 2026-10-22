@@ -21,6 +21,31 @@ SYNTHETIC_DISCLAIMER = (
     "Detector metrics measure agreement with synthetic labels and do not estimate real-world performance."
 )
 EVENT_ID_RE = re.compile(r"\b(?:ev|q)-[0-9a-f]{16}\b")
+CAUSAL_RE = re.compile(
+    r"\b(caus(?:e|es|ed|ing|ation)|because|led to|leads? to|leading to|result(?:s|ed|ing)? in|as a result|resulting|"
+    r"resultant|trigger(?:s|ed|ing)?|due to|in order to|so that|consequen(?:ce|ces|t|tly)|therefore|thereby|hence|"
+    r"thus|accordingly|owing to|on account of|brought about|g[ai]ve rise to|gives rise to|giving rise to|"
+    r"enabl(?:e|es|ed|ing)|allow(?:s|ed|ing)|permitt(?:ed|ing)|made possible|responsible for|attributable to|"
+    r"contribut(?:e|es|ed|ing) to|stem(?:s|med|ming)? from|aris(?:e|es|ing) from|arose from|prompt(?:ed|ing)|"
+    r"provok(?:e|es|ed|ing)|induc(?:e|es|ed|ing)|spark(?:s|ed|ing)|driv(?:e|es|en|ing)|drove|produc(?:e|es|ed|ing))\b",
+    re.IGNORECASE,
+)
+QUOTED_RE = re.compile(r'"[^"]*"')
+PLAIN_TOKEN_RE = re.compile(r"[A-Za-z0-9._:/@+=,-]+")
+
+
+def data(value: object) -> str:
+    """A raw value spliced into narrative text: control characters and newlines collapsed to spaces, non-ASCII
+    escaped, double quotes swapped for single quotes, at most 120 characters. Anything that is not one plain token,
+    or that contains causal wording, is wrapped in double quotes, so readers and the causal-language check treat it
+    as quoted data rather than as the engine's own words."""
+    text = " ".join(re.sub(r"[\x00-\x1f\x7f]", " ", str(value)).split())
+    text = text.encode("ascii", "backslashreplace").decode("ascii").replace('"', "'")
+    if len(text) > 120:
+        text = text[:117] + "..."
+    if PLAIN_TOKEN_RE.fullmatch(text) and not CAUSAL_RE.search(text):
+        return text
+    return f'"{text}"'
 
 
 def dumps(obj: Any) -> str:

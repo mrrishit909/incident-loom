@@ -16,9 +16,31 @@ from jsonschema import Draft202012Validator
 
 from . import __version__
 from .detect import DETECTORS
-from .ingest import REASONS, raw_record, record_event_id
-from .investigate import SILENCE_MINUTES, explicit_link
-from .util import EVENT_ID_RE, SCHEMAS, SYNTHETIC_DISCLAIMER, iso_ms, jbytes, sha256
+from .ingest import (
+    EARLY_TOLERANCE_MINUTES,
+    KNOWN_SOURCES,
+    LATE_TOLERANCE_HOURS,
+    REASONS,
+    batch_summary,
+    ingest_batch,
+    new_state,
+    raw_record,
+    record_event_id,
+)
+from .investigate import PROCESS_WINDOW, SESSION_WINDOW, SILENCE_MINUTES, explicit_link
+from .util import (
+    CAUSAL_RE,
+    EVENT_ID_RE,
+    HOUR,
+    QUOTED_RE,
+    SCHEMAS,
+    SYNTHETIC_DISCLAIMER,
+    data,
+    iso_ms,
+    jbytes,
+    parse_utc,
+    sha256,
+)
 
 MAX_BYTES = 1_900_000
 EVIDENCE_FILES = [
@@ -37,31 +59,7 @@ EVIDENCE_FILES = [
     "checks.json",
 ]
 REQUIRED_FILES = sorted(EVIDENCE_FILES + ["manifest.json", "replay.json"])
-NARRATIVE_KEYS = {
-    "text",
-    "statement",
-    "summary",
-    "title",
-    "description",
-    "distinguishing_evidence",
-    "confidence_basis",
-    "severity_basis",
-    "reason",
-    "disclaimer",
-    "role",
-    "note",
-    "scoring",
-    "tuning",
-    "detail",
-    "headline",
-}
-RAW_KEYS = {"details", "excerpt", "observed_at_raw"}
-CAUSAL_RE = re.compile(
-    r"\b(caus(?:e|es|ed|ing)|because|led to|leads? to|leading to|result(?:s|ed|ing)? in|as a result|resulting|"
-    r"trigger(?:s|ed|ing)?|due to|in order to|so that|consequently|therefore|thereby|owing to|on account of|"
-    r"brought about|g[ai]ve rise to|gives rise to)\b",
-    re.IGNORECASE,
-)
+RAW_KEYS = {"details", "excerpt", "observed_at_raw"}  # raw record data, never the engine's own words
 SEQUENCE_RE = re.compile(r"\b(followed|preceded|within|after|before)\b")
 CAUSAL_EVIDENCE = ("same_session", "same_request", "same_process", "parent_id")
 ATTRIBUTION_EVIDENCE = ("record_field", "audit_actor_target")
@@ -70,17 +68,21 @@ REASON_TEXT = {
     "wrong_field_count": "a CSV row with the wrong number of fields",
     "missing_required_field": "a required field is missing or empty",
     "invalid_timestamp": "the timestamp is missing an explicit zone, malformed or out of range",
+    "invalid_field": "a field has the wrong type or an unusable value (any other per-record failure lands here too)",
+    "outside_batch_window": "the event time lies outside its batch coverage beyond the late and early tolerances",
+    "conflicting_redelivery": "a record id already ingested arrived again with different content; the first copy "
+    "is kept and this delivery is listed under ingest.json conflicts",
 }
 LINK_TYPES = {
     "causal": "event to event, backed by a shared session, request or process id or a recorded parent id",
     "temporal": "event to event, only the order in time is known; worded as sequence",
-    "attribution": "a single record names this entity as its actor, target or address; no claim that one event "
-    "produced another",
+    "attribution": "a single record names this entity as its actor, target or address; nothing more is claimed",
 }
 
 
 def causal_phrases(text: str) -> list[str]:
-    return [m.group(0) for m in CAUSAL_RE.finditer(text)]
+    """Causal wording in the engine's own words; double-quoted spans are raw data (see util.data) and skipped."""
+    return [m.group(0) for m in CAUSAL_RE.finditer(QUOTED_RE.sub(" ", text))]
 
 
 def public(obj: Any) -> Any:
@@ -93,6 +95,14 @@ def public(obj: Any) -> Any:
 
 # ---- rendering ------------------------------------------------------------------------------------
 def render_evidence(state: dict[str, Any], params: dict[str, Any], per_batch: list[dict[str, Any]]) -> dict[str, bytes]:
+    docs = build_docs(state, params, per_batch)
+    files = {name: (doc.encode("ascii") if name.endswith(".md") else jbytes(doc)) for name, doc in docs.items()}
+    files["checks.json"] = jbytes(run_checks(docs, files))
+    return files
+
+
+def build_docs(state: dict[str, Any], params: dict[str, Any], per_batch: list[dict[str, Any]]) -> dict[str, Any]:
+    """Every evidence document except checks.json, from an ingest state."""
     from .detect import detect
     from .evaluate import evaluate
     from .investigate import correlations, entities, find_gaps, investigate
@@ -100,7 +110,7 @@ def render_evidence(state: dict[str, Any], params: dict[str, Any], per_batch: li
     correction = params["clock_skew_correction"]
     events = sorted(state["events"].values(), key=lambda e: (e["corrected_ms"], e["event_id"]))
     dets = detect(events)
-    gaps = find_gaps(state, events)
+    gaps = find_gaps(state, events, KNOWN_SOURCES)
     incidents = investigate(events, dets, gaps, correction)
     by_id = {e["event_id"]: e for e in events}
     metrics = evaluate(dets, set(by_id))
@@ -130,7 +140,26 @@ def render_evidence(state: dict[str, Any], params: dict[str, Any], per_batch: li
                 "skew": "corrected_at_utc = observed_at_utc - declared_clock_offset_seconds when correction "
                 "is on; equal to observed_at_utc when it is off",
                 "accounting": "received = accepted + duplicates_exact + duplicates_redelivered + quarantined",
+                "batch_window": f"an event must fall between its batch coverage start minus {LATE_TOLERANCE_HOURS} h "
+                f"(late delivery) and coverage end plus {EARLY_TOLERANCE_MINUTES} min plus the declared clock offset; "
+                "anything else is quarantined as outside_batch_window",
+                "conflicts": "a record id seen again with different content is quarantined as conflicting_redelivery "
+                "and listed under conflicts; the first copy stays the event",
+                "redaction": "secret-looking values (password=, token=, api_key=, client_secret=, Bearer headers and "
+                "similar) are replaced by [REDACTED] in quarantine excerpts and in every published event detail; "
+                "events list the redacted fields in redacted_fields",
+                "explicit_ids": f"a session or request id links events only for the same actor within "
+                f"{SESSION_WINDOW // HOUR} h, a process or parent id within {PROCESS_WINDOW // HOUR} h; placeholder "
+                "ids such as '-', '0', 'null' or 'unknown' never link",
             },
+            "conflicts": [
+                {
+                    k: q[k]
+                    for k in ("quarantine_id", "batch", "source", "raw_ref", "conflicts_with", "conflicting_fields")
+                }
+                for q in sorted(state["quarantine"], key=lambda q: (q["batch"], q["source"], q["quarantine_id"]))
+                if q["reason"] == "conflicting_redelivery"
+            ],
         },
         "events.json": {
             "synthetic": True,
@@ -166,10 +195,16 @@ def render_evidence(state: dict[str, Any], params: dict[str, Any], per_batch: li
     }
     docs["summary.json"] = summary(docs, params)
     docs["report.md"] = report(docs, params)
-    files = {name: (doc.encode("ascii") if name.endswith(".md") else jbytes(doc)) for name, doc in docs.items()}
-    checks = run_checks(docs, files)
-    files["checks.json"] = jbytes(checks)
-    return files
+    return docs
+
+
+def rederive(params: dict[str, Any]) -> dict[str, Any]:
+    """Recompute every evidence document from the raw batches: the reference that validation compares against."""
+    state, per_batch = new_state(params["clock_skew_correction"]), []
+    for batch in params["batches"]:
+        ingest_batch(state, batch)
+        per_batch.append(batch_summary(state, batch))
+    return build_docs(state, params, per_batch)
 
 
 def summary(docs: dict[str, Any], params: dict[str, Any]) -> dict[str, Any]:
@@ -178,7 +213,9 @@ def summary(docs: dict[str, Any], params: dict[str, Any]) -> dict[str, Any]:
     gaps = docs["gaps.json"]["gaps"]
     sev = {s: sum(1 for i in incs if i["severity"] == s) for s in ("critical", "high", "medium", "low")}
     held = (docs["detector_metrics.json"]["held_out"] or {}).get("overall")
-    gap_text = "; ".join(f"{g['source']} {g['kind']} {g['start_utc'][:16]}Z to {g['end_utc'][:16]}Z" for g in gaps)
+    gap_text = "; ".join(
+        f"{data(g['source'])} {g['kind']} {g['start_utc'][:16]}Z to {g['end_utc'][:16]}Z" for g in gaps
+    )
     batches = params["batches"]
     statement = (
         f"{len(batches)} batch(es) {batches[0]} to {batches[-1]}, "
@@ -248,7 +285,8 @@ def report(docs: dict[str, Any], params: dict[str, Any]) -> str:
     for b in docs["ingest.json"]["batches"]:
         for x in b["sources"]:
             out.append(
-                f"| {x['batch']} | {x['source']} | {x['received']} | {x['accepted']} | {x['duplicates_exact']} | "
+                f"| {data(x['batch'])} | {data(x['source'])} | {x['received']} | {x['accepted']} | "
+                f"{x['duplicates_exact']} | "
                 f"{x['duplicates_redelivered']} | {x['out_of_order']} | {sum(x['quarantined'].values())} | "
                 f"{x['skew_applied_seconds']} |"
             )
@@ -353,22 +391,24 @@ def report(docs: dict[str, Any], params: dict[str, Any]) -> str:
         "- Temporal links state order only; absence of an explicit identifier is not proof of independence.",
         "",
     ]
-    return "\n".join(out)
+    # every value interpolated above is engine text or data() output; this last pass keeps the file one ASCII line
+    # per entry whatever a raw value contained
+    lines = [re.sub(r"[\x00-\x1f\x7f]", " ", line) for line in out]
+    return "\n".join(lines).encode("ascii", "backslashreplace").decode("ascii")
 
 
 # ---- checks (shared by the pipeline and validate) -------------------------------------------------
-def walk_narrative(obj: Any, path: str, hits: list[str]) -> None:
-    """Collect causal wording in narrative fields; only a link object typed causal may use it."""
-    if isinstance(obj, dict):
-        exempt = obj.get("link_type") == "causal"
+def walk_narrative(obj: Any, path: str, hits: list[str], exempt: bool = False) -> None:
+    """Collect causal wording in every published prose string (any string with a space, under any key) except raw
+    record data; only the strings of a link object typed causal may use it."""
+    if isinstance(obj, str):
+        if not exempt and " " in obj and causal_phrases(obj):
+            hits.append(f"{path}: {', '.join(sorted(set(causal_phrases(obj))))}")
+    elif isinstance(obj, dict):
+        causal = obj.get("link_type") == "causal"
         for k, v in obj.items():
-            if k in RAW_KEYS:
-                continue
-            if k in NARRATIVE_KEYS and isinstance(v, str):
-                if not exempt and causal_phrases(v):
-                    hits.append(f"{path}/{k}: {', '.join(sorted(set(causal_phrases(v))))}")
-            else:
-                walk_narrative(v, f"{path}/{k}", hits)
+            if k not in RAW_KEYS:
+                walk_narrative(v, f"{path}/{k}", hits, causal and isinstance(v, str))
     elif isinstance(obj, list):
         for i, v in enumerate(obj):
             walk_narrative(v, f"{path}/{i}", hits)
@@ -425,6 +465,15 @@ def run_checks(docs: dict[str, Any], files: dict[str, bytes]) -> dict[str, Any]:
     by_id = {e["event_id"]: e for e in events}
     valid = set(by_id) | {q["quarantine_id"] for q in docs["quarantine.json"]["records"]}
     checks: list[dict[str, Any]] = []
+    params = {
+        "batches": [b.get("batch") for b in docs["ingest.json"].get("batches", [])],
+        "clock_skew_correction": docs["ingest.json"].get("clock_skew_correction"),
+    }
+    try:
+        fresh: dict[str, Any] | None = rederive(params)
+        ref_error = None
+    except Exception as exc:  # tampered parameters or unreadable inputs: report, never crash
+        fresh, ref_error = None, f"re-derivation from the raw batches failed ({type(exc).__name__})"
 
     def check(name: str, problems: list[str], what: str) -> None:
         checks.append(
@@ -532,11 +581,45 @@ def run_checks(docs: dict[str, Any], files: dict[str, bytes]) -> dict[str, Any]:
     for q in docs["quarantine.json"]["records"]:
         if raw_record(q["raw_ref"]) is None:
             fabricated.append(f"{q['quarantine_id']} points at no input record")
+    if fresh is None:
+        fabricated.append(str(ref_error))
+    else:
+        derived = {e["event_id"]: e for e in fresh["events.json"]["events"]}
+        for e in events:
+            r = derived.get(e["event_id"])
+            if r is None:
+                fabricated.append(f"{e['event_id']} is not produced by the raw batches")
+            elif r != e:
+                fields = ", ".join(sorted(k for k in set(e) | set(r) if e.get(k) != r.get(k)))
+                fabricated.append(f"{e['event_id']}: {fields} differ from what its raw record normalizes to")
+        fabricated += [
+            f"{i} from the raw batches is missing from events.json" for i in sorted(set(derived) - set(by_id))
+        ]
+        ref_q = {q["quarantine_id"]: q for q in fresh["quarantine.json"]["records"]}
+        fabricated += [
+            f"{q['quarantine_id']} differs from the raw batches"
+            for q in docs["quarantine.json"]["records"]
+            if ref_q.get(q["quarantine_id"]) != q
+        ]
     check(
         "no_fabricated_events",
         fabricated,
-        "every event (and every duplicate delivery) re-derives its event id from "
-        "the raw input record it cites; every quarantined record points at a real input record",
+        "every event (and every duplicate delivery) re-derives its event id from the raw input record it cites, and "
+        "every normalized field (times, actor, target, action, outcome, address, ids, details) equals what that raw "
+        "record normalizes to; no raw record is missing; every quarantined record matches its raw input record",
+    )
+    check(
+        "outputs_rederived",
+        [str(ref_error)]
+        if fresh is None
+        else [
+            f"{name} differs from its re-derivation from the raw batches"
+            for name in sorted(fresh)
+            if docs.get(name) != fresh[name]
+        ],
+        "every evidence file (timeline text and links, detections and their member events, gaps, hypotheses and "
+        "their confidence, graph, entities, metrics arithmetic, summary counts and the report) equals a fresh "
+        "computation from the raw batches with the same batches and clock-skew setting",
     )
 
     acct = []
@@ -562,10 +645,29 @@ def run_checks(docs: dict[str, Any], files: dict[str, bytes]) -> dict[str, Any]:
         "totals match the events and quarantine files",
     )
 
-    gap_ids = {g["gap_id"] for g in docs["gaps.json"]["gaps"]}
+    gap_list = docs["gaps.json"]["gaps"]
+    gap_ids = {g["gap_id"] for g in gap_list}
     gap_probs = []
+    refs: dict[str, list[str]] = {g["gap_id"]: [] for g in gap_list}
     for inc in docs["incidents.json"]["incidents"]:
         for h in inc["hypotheses"]:
+            times = [parse_utc(by_id[i]["corrected_at_utc"]) for i in h["supporting_event_ids"] if i in by_id]
+            if times:  # recompute the dependencies independently of what the hypothesis declares
+                lo, hi = min(times), max(times) + 2 * HOUR
+                expected = [
+                    g["gap_id"]
+                    for g in gap_list
+                    if g["source"] in h["expected_sources"]
+                    and parse_utc(g["start_utc"]) < hi
+                    and parse_utc(g["end_utc"]) > lo
+                ]
+                if expected != h["depends_on_gaps"]:
+                    gap_probs.append(
+                        f"{inc['incident_id']}/{h['hypothesis_id']}: depends on {expected} by its "
+                        f"supporting events and expected sources, declares {h['depends_on_gaps']}"
+                    )
+            for gid in h["depends_on_gaps"]:
+                refs.setdefault(gid, []).append(f"{inc['incident_id']}/{h['hypothesis_id']}")
             for gid in h["depends_on_gaps"]:
                 if (
                     gid not in gap_ids
@@ -579,11 +681,16 @@ def run_checks(docs: dict[str, Any], files: dict[str, bytes]) -> dict[str, Any]:
                 gap_probs.append(f"{inc['incident_id']}/{h['hypothesis_id']}: confidence not lowered for its gap")
             if not h["depends_on_gaps"] and drop:
                 gap_probs.append(f"{inc['incident_id']}/{h['hypothesis_id']}: confidence lowered without a gap")
+    gap_probs += [
+        f"{g['gap_id']}: hypothesis_refs {g['hypothesis_refs']} != {refs.get(g['gap_id'])}"
+        for g in gap_list
+        if sorted(g["hypothesis_refs"]) != sorted(refs.get(g["gap_id"], []))
+    ]
     check(
         "gaps_lower_confidence",
         gap_probs,
-        "hypotheses that depend on an evidence gap name it, list it as missing "
-        "evidence and drop one confidence level (unless already low)",
+        "each hypothesis's gap dependencies are recomputed from its supporting events and expected sources; those "
+        "that depend on a gap name it, list it as missing evidence and drop one confidence level (unless already low)",
     )
 
     m, s = docs["detector_metrics.json"], docs["summary.json"]
@@ -645,9 +752,9 @@ def validate(out_dir: Path) -> list[str]:
     if total > MAX_BYTES:
         problems.append(f"outputs total {total} bytes, above {MAX_BYTES}")
     docs: dict[str, Any] = {}
-    for n, data in files.items():
+    for n, blob in files.items():
         try:
-            text = data.decode("ascii")
+            text = blob.decode("ascii")
         except UnicodeDecodeError:
             problems.append(f"{n} is not ASCII")
             continue

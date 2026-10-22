@@ -57,9 +57,11 @@ detectors; they show that the evaluation works, not how the detectors would do o
 Synthetic batches only, for a fictional organisation; no real logs, no uploads, no response actions.
 Thresholds were chosen by inspecting the development scenarios (no automated sweep); four rules have a
 single development case, so their windows are partly a-priori. Confidence is a documented, uncalibrated
-point rule, and hypotheses and alternatives are templates per detector type. Deduplication decides exact
-versus re-delivered copies by delivery id and keeps the first delivery; it does not compare conflicting
-content between deliveries. Incidents are grouped by primary entity within 24 hours, so a spray address
+point rule, and hypotheses and alternatives are templates per detector type. Deduplication keeps the first
+delivery; a later delivery that reuses a record id with different content is quarantined as a conflict,
+not merged. Records more than 72 hours late or more than 30 minutes early for their batch are
+quarantined; links between events need the same actor and fall within 24 hours (session or request id)
+or 8 hours (process or parent id). These windows are engine constants stated in `ingest.json`. Incidents are grouped by primary entity within 24 hours, so a spray address
 and its targets are separate incidents. The 120-minute silence threshold assumes steady background
-traffic. Causal wording is checked against a fixed phrase list. The optional AI grader runs only if the
+traffic. Causal wording is checked against a fixed (widened) phrase list. The optional AI grader runs only if the
 owner adds an inference secret; release records state whether it ran.
