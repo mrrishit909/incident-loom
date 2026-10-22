@@ -3,10 +3,10 @@
     {
       "attempt": 1,
       "run_id": "incident-loom-20261022T055610Z-b0df40b9-a1",
-      "status": "running"
+      "status": "completed"
     }
   ],
-  "latest_status": "running",
+  "latest_status": "completed",
   "params_hash": "sha256:8e1e1a5b57978ce2c353beab2e11b130a3bf0a7ca3434a063adb8f2eb463c5a8",
   "request_id": "b0df40b96774cabe"
 }

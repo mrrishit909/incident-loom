@@ -1,10 +1,12 @@
 {
   "attempt": 1,
-  "completed_at": null,
+  "completed_at": "2026-10-22T05:56:36Z",
   "created_at": "2026-10-22T05:56:10Z",
   "error_summary": null,
-  "evidence_paths": [],
-  "input_manifest_hash": null,
+  "evidence_paths": [
+    "https://github.com/mrrishit909/incident-loom/actions/runs/39730852609"
+  ],
+  "input_manifest_hash": "sha256:62ca978f107a6dcbb601835170ed87762731525ac9233972b557d9ddfd337424",
   "parent_run_id": null,
   "project": "incident-loom",
   "request_id": "b0df40b96774cabe",
@@ -18,14 +20,30 @@
       "usd": null,
       "used": false
     },
-    "output_bytes": null,
-    "wall_seconds": null
+    "output_bytes": 1417846,
+    "wall_seconds": 26.0
   },
-  "result_paths": [],
+  "result_paths": [
+    "runs/incident-loom-20261022T055610Z-b0df40b9-a1/checkpoint.json",
+    "runs/incident-loom-20261022T055610Z-b0df40b9-a1/checks.json",
+    "runs/incident-loom-20261022T055610Z-b0df40b9-a1/correlations.json",
+    "runs/incident-loom-20261022T055610Z-b0df40b9-a1/detections.json",
+    "runs/incident-loom-20261022T055610Z-b0df40b9-a1/detector_metrics.json",
+    "runs/incident-loom-20261022T055610Z-b0df40b9-a1/entities.json",
+    "runs/incident-loom-20261022T055610Z-b0df40b9-a1/events.json",
+    "runs/incident-loom-20261022T055610Z-b0df40b9-a1/gaps.json",
+    "runs/incident-loom-20261022T055610Z-b0df40b9-a1/incidents.json",
+    "runs/incident-loom-20261022T055610Z-b0df40b9-a1/ingest.json",
+    "runs/incident-loom-20261022T055610Z-b0df40b9-a1/manifest.json",
+    "runs/incident-loom-20261022T055610Z-b0df40b9-a1/quarantine.json",
+    "runs/incident-loom-20261022T055610Z-b0df40b9-a1/replay.json",
+    "runs/incident-loom-20261022T055610Z-b0df40b9-a1/report.md",
+    "runs/incident-loom-20261022T055610Z-b0df40b9-a1/summary.json"
+  ],
   "run_id": "incident-loom-20261022T055610Z-b0df40b9-a1",
   "schema_version": "1.0",
   "source_commit": "0619556005515979e0294861347fb0428a17af2d",
   "started_at": "2026-10-22T05:56:10Z",
-  "status": "running",
+  "status": "completed",
   "workflow_run_id": 39730852609
 }
