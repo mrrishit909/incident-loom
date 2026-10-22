@@ -52,6 +52,18 @@ detectors; they show that the evaluation works, not how the detectors would do o
 [portfolio integration](docs/PORTFOLIO_INTEGRATION.md), [design contract](docs/DESIGN_CONTRACT.md),
 [portfolio manifest](portfolio-manifest.json).
 
+## Assets and licences
+
+| Font | Package | Licence |
+|---|---|---|
+| Bricolage Grotesque | `@fontsource-variable/bricolage-grotesque` 5.3.0 | SIL Open Font License 1.1, (c) The Bricolage Grotesque Project Authors |
+| Spline Sans Mono | `@fontsource-variable/spline-sans-mono` 5.3.0 | SIL Open Font License 1.1, (c) The Spline Sans Mono Project Authors |
+
+The fonts are installed from npm (Fontsource packages, which carry the OFL text) and bundled into the
+site's build; nothing loads from a third-party font service. Icons and illustrations are original inline
+SVG and CSS; there are no photographs or third-party images. Every log record, user, host and address is synthetic, using documentation address ranges. The code is published
+in this public repository.
+
 ## Limitations
 
 Synthetic batches only, for a fictional organisation; no real logs, no uploads, no response actions.
