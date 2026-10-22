@@ -2,6 +2,17 @@
   "runs": [
     {
       "attempt": 1,
+      "completed_at": null,
+      "created_at": "2026-10-22T06:00:48Z",
+      "headline": null,
+      "issue": null,
+      "request_id": "3f1a6d6b74a42651",
+      "run_id": "incident-loom-20261022T060048Z-3f1a6d6b-a1",
+      "source": "manual",
+      "status": "running"
+    },
+    {
+      "attempt": 1,
       "completed_at": "2026-10-22T05:56:36Z",
       "created_at": "2026-10-22T05:56:10Z",
       "headline": "10 incidents (2 critical, 5 high) from 1502 synthetic events; 2 evidence gap(s); held-out precision 0.8, recall 0.8 (synthetic labels)",
