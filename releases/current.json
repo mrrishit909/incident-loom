@@ -1,8 +1,8 @@
 {
   "blocked_reason": null,
-  "created_at": "2026-10-22T06:13:10Z",
+  "created_at": "2026-10-22T06:18:37Z",
   "defect_batch_id": null,
-  "evidence_dir": "outcomes/incident-loom-20261022T061310Z-527ee20/",
+  "evidence_dir": "outcomes/incident-loom-20261022T061837Z-4b4ce73/",
   "findings": [
     {
       "detail": "sha256:397d62e4db5d9c179a11a541cbe58ea040b9b4006d5d3280869768ffe4f0af7f",
@@ -23,7 +23,7 @@
       "id": "investigation-gates",
       "kind": "pytest",
       "objective": true,
-      "seconds": 30.01,
+      "seconds": 16.56,
       "status": "pass",
       "title": "Every factual claim links to source events; causality never asserted from time proximity alone; deterministic replay; restart never duplicates events; detector metrics on held-out labelled fixtures only; synthetic performance labelled synthetic; missing logs produce uncertainty, not fabricated evidence"
     },
@@ -36,7 +36,7 @@
       "id": "harness",
       "kind": "pytest",
       "objective": true,
-      "seconds": 4.17,
+      "seconds": 4.08,
       "status": "pass",
       "title": "State machine, idempotency, concurrency, intake authorization, outcome and memory guards"
     },
@@ -48,7 +48,7 @@
       "id": "secret-scan",
       "kind": "command",
       "objective": true,
-      "seconds": 0.33,
+      "seconds": 0.64,
       "status": "pass",
       "title": "No credentials in the repository or in the live site's shipped assets"
     },
@@ -60,7 +60,7 @@
       "id": "live-site",
       "kind": "live",
       "objective": true,
-      "seconds": 0.06,
+      "seconds": 0.2,
       "status": "pass",
       "title": "Live Pages site loads and its data snapshot points at the state branch's latest run"
     },
@@ -72,7 +72,7 @@
       "id": "published-matches-state",
       "kind": "command",
       "objective": true,
-      "seconds": 0.72,
+      "seconds": 3.14,
       "status": "pass",
       "title": "Published result files are byte-identical to the accepted computation"
     },
@@ -90,16 +90,16 @@
     }
   ],
   "project": "incident-loom",
-  "release_id": "incident-loom-20261022T061310Z-527ee20",
+  "release_id": "incident-loom-20261022T061837Z-4b4ce73",
   "repair_round": 0,
   "rubric_sha256": "sha256:397d62e4db5d9c179a11a541cbe58ea040b9b4006d5d3280869768ffe4f0af7f",
   "run_id": "incident-loom-20261022T060048Z-3f1a6d6b-a1",
-  "source_commit": "527ee205de8d7a5c04d9242f473233f002c915c0",
+  "source_commit": "4b4ce7349e5252a0aeecf7bf32f7b4cce482c4c3",
   "status": "released",
   "subjective": {
     "reason": "inference credentials are not configured for this repository",
     "scores": [],
     "status": "not_run"
   },
-  "workflow_run_url": "https://github.com/mrrishit909/incident-loom/actions/runs/39732323156"
+  "workflow_run_url": "https://github.com/mrrishit909/incident-loom/actions/runs/39732869352"
 }
