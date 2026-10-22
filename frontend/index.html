@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Incident Loom: evidence-linked security timelines</title>
+    <meta name="description" content="Replayable investigation of synthetic security logs: append-only batches, deduplication and clock-skew correction, incidents with evidence-linked timelines, alternative explanations, gaps that lower confidence, and detector metrics on held-out labelled scenarios." />
+    <meta name="theme-color" content="#1C1613" />
+    <meta property="og:title" content="Incident Loom" />
+    <meta property="og:description" content="Every claim links to its source events; time proximity is never presented as cause; missing logs show up as uncertainty." />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://mrrishit909.github.io/incident-loom/" />
+    <meta property="og:image" content="https://mrrishit909.github.io/incident-loom/preview.jpg" />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%231C1613'/%3E%3Cpath d='M4 10H28M4 16H28M4 22H28' stroke='%236E5E50' stroke-width='1.4'/%3E%3Cpath d='M11 10 L18 16 L23 22' stroke='%23EC8F78' stroke-width='1.6' fill='none'/%3E%3Crect x='9' y='8' width='4' height='4' transform='rotate(45 11 10)' fill='%23EC8F78'/%3E%3Ccircle cx='18' cy='16' r='2.2' fill='%231C1613' stroke='%23BBBE8E' stroke-width='1.4'/%3E%3Crect x='21' y='20' width='4' height='4' fill='none' stroke='%23E3BC66' stroke-dasharray='1.5 1'/%3E%3C/svg%3E" />
+    <style>
+      html, body { margin: 0; background: #1c1613; color: #fff6e8; }
+      @media (prefers-color-scheme: light) { html, body { background: #fff6e8; color: #29201b; } }
+      #app[data-boot] { font: 16px/1.55 system-ui, sans-serif; padding: 48px 24px; max-width: 70ch; }
+    </style>
+  </head>
+  <body>
+    <div id="app" data-app="incident-loom" data-boot>
+      <noscript>
+        <h1>Incident Loom</h1>
+        <p>The investigation workspace needs JavaScript. Every run record and output file is also readable directly on the
+        <a href="https://github.com/mrrishit909/incident-loom/tree/state">state branch</a>.</p>
+      </noscript>
+    </div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

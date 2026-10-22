@@ -1,0 +1,435 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/mrrishit909/incident-loom/schemas/outputs.schema.json",
+  "title": "Incident Loom run outputs (frontend contract)",
+  "description": "One $defs entry per JSON output file, keyed by file name. All JSON is canonical: sorted keys, compact separators, ASCII, newline-terminated; no wall-clock time and no absolute path. Times are UTC 'YYYY-MM-DDTHH:MM:SS.mmmZ'. Ids: events 'ev-<16 hex>', quarantined records 'q-<16 hex>', detections 'det-<12 hex>', incidents 'inc-<10 hex>', gaps 'gap-<10 hex>', graph edges 'edge-<12 hex>'; timeline entries 't01'.. and links 'l01'.. are local to their incident. Entities are '<kind>:<name>' with kind user|host|ip|resource. events.json items follow schemas/event.schema.json. report.md is Markdown and is not described here.",
+  "$defs": {
+    "utc": {"type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$"},
+    "sha": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "eventId": {"type": "string", "pattern": "^ev-[0-9a-f]{16}$"},
+    "eventIds": {"type": "array", "items": {"$ref": "#/$defs/eventId"}},
+    "nonEmptyEventIds": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/eventId"}},
+    "entity": {"type": "string", "pattern": "^(user|host|ip|resource):.+$"},
+    "severity": {"enum": ["low", "medium", "high", "critical"]},
+    "confidence": {"enum": ["low", "medium", "high"]},
+    "source": {"enum": ["idp_signin", "cloud_audit", "host_auth", "resource_access"]},
+    "rawRef": {"type": "object", "required": ["file"], "properties": {"file": {"type": "string"}, "line": {"type": "integer"}, "pointer": {"type": "string"}}},
+    "metricCounts": {
+      "type": "object",
+      "required": ["tp", "fp", "fn", "tn", "precision", "recall"],
+      "properties": {
+        "tp": {"type": "integer"}, "fp": {"type": "integer"}, "fn": {"type": "integer"}, "tn": {"type": "integer"},
+        "precision": {"description": "null when tp + fp = 0", "type": ["number", "null"]},
+        "recall": {"description": "null when there is nothing to recall", "type": ["number", "null"]}
+      }
+    },
+    "metricsBlock": {
+      "type": ["object", "null"],
+      "required": ["role", "scenarios_scored", "overall", "per_detector", "scenarios", "excluded"],
+      "properties": {
+        "role": {"type": "string"},
+        "scenarios_scored": {"type": "integer"},
+        "overall": {"$ref": "#/$defs/metricCounts"},
+        "per_detector": {"type": "array", "items": {"allOf": [{"$ref": "#/$defs/metricCounts"}, {"type": "object", "required": ["detector", "relevant_incident_scenarios"]}]}},
+        "scenarios": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["scenario_id", "kind", "expected", "techniques", "detected_by", "outcome"],
+            "properties": {
+              "scenario_id": {"type": "string"}, "kind": {"type": "string"},
+              "expected": {"enum": ["incident", "benign"]},
+              "techniques": {"type": "array", "items": {"type": "string"}},
+              "detected_by": {"type": "array", "items": {"type": "string"}},
+              "outcome": {"enum": ["tp", "fp", "fn", "tn"]}
+            }
+          }
+        },
+        "excluded": {"type": "array", "items": {"type": "object", "required": ["scenario_id", "reason"]}}
+      }
+    },
+    "link": {
+      "description": "A link between two timeline entries of one incident. causal requires an explicit identifier (evidence_type same_session|same_request|same_process|parent_id with evidence_value) and is re-verified from the two cited events; temporal states order only and its text is worded as sequence.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["link_id", "from", "to", "link_type", "evidence_type", "evidence_value", "event_ids", "text"],
+      "properties": {
+        "link_id": {"type": "string", "pattern": "^l\\d{2,}$"},
+        "from": {"type": "string", "pattern": "^t\\d{2,}$"},
+        "to": {"type": "string", "pattern": "^t\\d{2,}$"},
+        "link_type": {"enum": ["causal", "temporal"]},
+        "evidence_type": {"enum": ["same_session", "same_request", "same_process", "parent_id", null]},
+        "evidence_value": {"type": ["string", "null"]},
+        "event_ids": {"type": "array", "minItems": 2, "maxItems": 2, "items": {"$ref": "#/$defs/eventId"}},
+        "text": {"type": "string"}
+      }
+    },
+    "timelineEntry": {
+      "description": "Consecutive events with the same source, action, outcome, actor, target and address, merged.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["entry_id", "at_utc", "end_utc", "raw_at_utc", "raw_end_utc", "skew_applied_seconds", "source", "action", "count", "text", "event_ids", "detection_ids"],
+      "properties": {
+        "entry_id": {"type": "string", "pattern": "^t\\d{2,}$"},
+        "at_utc": {"description": "corrected time of the first event", "$ref": "#/$defs/utc"},
+        "end_utc": {"$ref": "#/$defs/utc"},
+        "raw_at_utc": {"description": "uncorrected time of the first event; null when correction is off", "anyOf": [{"$ref": "#/$defs/utc"}, {"type": "null"}]},
+        "raw_end_utc": {"anyOf": [{"$ref": "#/$defs/utc"}, {"type": "null"}]},
+        "skew_applied_seconds": {"type": "integer"},
+        "source": {"$ref": "#/$defs/source"},
+        "action": {"type": "string"},
+        "count": {"type": "integer", "minimum": 1},
+        "text": {"type": "string"},
+        "event_ids": {"$ref": "#/$defs/nonEmptyEventIds"},
+        "detection_ids": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "alternative": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "statement", "event_ids", "distinguishing_evidence"],
+      "properties": {
+        "kind": {"enum": ["benign", "malicious"]},
+        "statement": {"type": "string"},
+        "event_ids": {"$ref": "#/$defs/nonEmptyEventIds"},
+        "distinguishing_evidence": {"type": "string"}
+      }
+    },
+    "hypothesis": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["hypothesis_id", "statement", "supporting_event_ids", "contradicting_event_ids", "missing_evidence", "depends_on_gaps", "expected_sources", "confidence", "confidence_before_gaps", "confidence_basis", "alternatives"],
+      "properties": {
+        "hypothesis_id": {"type": "string", "pattern": "^h\\d+$"},
+        "statement": {"description": "names every gap it depends on", "type": "string"},
+        "supporting_event_ids": {"$ref": "#/$defs/nonEmptyEventIds"},
+        "contradicting_event_ids": {"$ref": "#/$defs/eventIds"},
+        "missing_evidence": {
+          "type": "array",
+          "items": {"type": "object", "additionalProperties": false, "required": ["gap_id", "source", "start_utc", "end_utc", "description"],
+                    "properties": {"gap_id": {"type": "string"}, "source": {"$ref": "#/$defs/source"}, "start_utc": {"$ref": "#/$defs/utc"}, "end_utc": {"$ref": "#/$defs/utc"}, "description": {"type": "string"}}}
+        },
+        "depends_on_gaps": {"type": "array", "items": {"type": "string", "pattern": "^gap-[0-9a-f]{10}$"}},
+        "expected_sources": {"type": "array", "items": {"$ref": "#/$defs/source"}},
+        "confidence": {"$ref": "#/$defs/confidence"},
+        "confidence_before_gaps": {"$ref": "#/$defs/confidence"},
+        "confidence_basis": {"type": "string"},
+        "alternatives": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/alternative"}}
+      }
+    },
+    "manifest.json": {
+      "type": "object",
+      "required": ["package", "version", "params", "input_manifest_hash", "input_manifest_hash_basis", "inputs", "labels_sha256", "reference_files", "outputs", "synthetic"],
+      "properties": {
+        "package": {"const": "incidentloom"},
+        "version": {"type": "string"},
+        "params": {"type": "object", "required": ["batches", "clock_skew_correction", "simulate_restart_after"]},
+        "input_manifest_hash": {"$ref": "#/$defs/sha"},
+        "input_manifest_hash_basis": {"type": "string"},
+        "inputs": {"description": "repository-relative input path -> sha256", "type": "object", "additionalProperties": {"$ref": "#/$defs/sha"}},
+        "labels_sha256": {"anyOf": [{"$ref": "#/$defs/sha"}, {"type": "null"}]},
+        "reference_files": {"type": "object", "additionalProperties": {"$ref": "#/$defs/sha"}},
+        "outputs": {"type": "array", "items": {"type": "string"}},
+        "synthetic": {"const": true}
+      }
+    },
+    "ingest.json": {
+      "type": "object",
+      "required": ["synthetic", "clock_skew_correction", "batches", "totals", "quarantined_by_reason", "rules"],
+      "properties": {
+        "synthetic": {"const": true},
+        "clock_skew_correction": {"enum": ["on", "off"]},
+        "batches": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["batch", "sources"],
+            "properties": {
+              "batch": {"type": "string"},
+              "sources": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["batch", "source", "file", "file_sha256", "format", "timestamp_format", "timezone", "declared_clock_offset_seconds", "skew_applied_seconds", "received", "accepted", "duplicates_exact", "duplicates_redelivered", "out_of_order", "quarantined"],
+                  "properties": {
+                    "source": {"$ref": "#/$defs/source"}, "file": {"type": "string"}, "file_sha256": {"$ref": "#/$defs/sha"},
+                    "format": {"enum": ["jsonl", "json", "syslog", "csv"]},
+                    "declared_clock_offset_seconds": {"type": "integer"}, "skew_applied_seconds": {"type": "integer"},
+                    "received": {"type": "integer"}, "accepted": {"type": "integer"}, "duplicates_exact": {"type": "integer"},
+                    "duplicates_redelivered": {"type": "integer"}, "out_of_order": {"type": "integer"},
+                    "quarantined": {"description": "reason code -> count", "type": "object", "additionalProperties": {"type": "integer"}}
+                  }
+                }
+              }
+            }
+          }
+        },
+        "totals": {"type": "object", "required": ["received", "accepted", "duplicates_exact", "duplicates_redelivered", "out_of_order", "quarantined"]},
+        "quarantined_by_reason": {"type": "object", "additionalProperties": {"type": "integer"}},
+        "rules": {"type": "object"}
+      }
+    },
+    "events.json": {
+      "type": "object",
+      "required": ["synthetic", "count", "events"],
+      "properties": {
+        "synthetic": {"const": true},
+        "count": {"type": "integer"},
+        "events": {"description": "sorted by corrected_at_utc then event_id; items follow event.schema.json", "type": "array", "items": {"type": "object"}}
+      }
+    },
+    "quarantine.json": {
+      "type": "object",
+      "required": ["count", "by_reason", "reasons", "records"],
+      "properties": {
+        "count": {"type": "integer"},
+        "by_reason": {"type": "object", "additionalProperties": {"type": "integer"}},
+        "reasons": {"type": "object", "additionalProperties": {"type": "string"}},
+        "records": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["quarantine_id", "batch", "source", "raw_ref", "reason", "detail", "excerpt"],
+            "properties": {
+              "quarantine_id": {"type": "string", "pattern": "^q-[0-9a-f]{16}$"},
+              "batch": {"type": "string"}, "source": {"$ref": "#/$defs/source"}, "raw_ref": {"$ref": "#/$defs/rawRef"},
+              "reason": {"enum": ["parse_error", "wrong_field_count", "missing_required_field", "invalid_timestamp"]},
+              "detail": {"type": "string"},
+              "excerpt": {"description": "first 160 printable ASCII characters with token/password/secret/key/auth values replaced by [REDACTED]", "type": "string", "maxLength": 160}
+            }
+          }
+        }
+      }
+    },
+    "entities.json": {
+      "type": "object",
+      "required": ["entities"],
+      "properties": {
+        "entities": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["entity", "kind", "events", "sources", "countries", "first_seen_utc", "last_seen_utc", "incident_ids"],
+            "properties": {
+              "entity": {"$ref": "#/$defs/entity"}, "kind": {"enum": ["user", "host", "ip", "resource"]},
+              "events": {"type": "integer"}, "sources": {"type": "array", "items": {"$ref": "#/$defs/source"}},
+              "countries": {"type": "array", "items": {"type": "string"}},
+              "first_seen_utc": {"$ref": "#/$defs/utc"}, "last_seen_utc": {"$ref": "#/$defs/utc"},
+              "incident_ids": {"type": "array", "items": {"type": "string"}}
+            }
+          }
+        }
+      }
+    },
+    "detections.json": {
+      "type": "object",
+      "required": ["detectors", "detections"],
+      "properties": {
+        "detectors": {
+          "type": "array",
+          "items": {"type": "object", "required": ["id", "title", "severity", "sources", "description", "tuning", "thresholds"]}
+        },
+        "detections": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["detection_id", "detector", "severity", "entity", "related_entities", "start_utc", "end_utc", "event_ids", "summary", "measurements", "sources", "basis_detection_ids"],
+            "properties": {
+              "detection_id": {"type": "string", "pattern": "^det-[0-9a-f]{12}$"},
+              "detector": {"enum": ["password_spray", "brute_force_success", "impossible_travel", "mfa_fatigue", "privilege_after_anomalous_signin", "public_exposure_after_anomaly", "mass_download_after_exposure", "logging_disabled"]},
+              "severity": {"$ref": "#/$defs/severity"}, "entity": {"$ref": "#/$defs/entity"},
+              "related_entities": {"type": "array", "items": {"$ref": "#/$defs/entity"}},
+              "start_utc": {"$ref": "#/$defs/utc"}, "end_utc": {"$ref": "#/$defs/utc"},
+              "event_ids": {"$ref": "#/$defs/nonEmptyEventIds"}, "summary": {"type": "string"},
+              "measurements": {"type": "object"}, "sources": {"type": "array", "items": {"$ref": "#/$defs/source"}},
+              "basis_detection_ids": {"description": "earlier detections this one builds on", "type": "array", "items": {"type": "string"}}
+            }
+          }
+        }
+      }
+    },
+    "incidents.json": {
+      "type": "object",
+      "required": ["incidents"],
+      "properties": {
+        "incidents": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["incident_id", "title", "severity", "severity_basis", "primary_entity", "window", "detection_ids", "detectors", "event_ids", "context_event_ids", "entities", "timeline", "links", "hypotheses", "gaps", "gaps_hypotheses_depend_on"],
+            "properties": {
+              "incident_id": {"type": "string", "pattern": "^inc-[0-9a-f]{10}$"},
+              "title": {"type": "string"}, "severity": {"$ref": "#/$defs/severity"}, "severity_basis": {"type": "string"},
+              "primary_entity": {"$ref": "#/$defs/entity"},
+              "window": {"type": "object", "required": ["start_utc", "end_utc"], "properties": {"start_utc": {"$ref": "#/$defs/utc"}, "end_utc": {"$ref": "#/$defs/utc"}}},
+              "detection_ids": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+              "detectors": {"type": "array", "items": {"type": "string"}},
+              "event_ids": {"description": "every event in the timeline", "$ref": "#/$defs/nonEmptyEventIds"},
+              "context_event_ids": {"description": "events added because an explicit id joins them to detection events", "$ref": "#/$defs/eventIds"},
+              "entities": {
+                "type": "array",
+                "items": {"type": "object", "additionalProperties": false, "required": ["entity", "roles", "event_ids"],
+                          "properties": {"entity": {"$ref": "#/$defs/entity"}, "roles": {"type": "array", "items": {"enum": ["actor", "target", "address"]}}, "event_ids": {"$ref": "#/$defs/nonEmptyEventIds"}}}
+              },
+              "timeline": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/timelineEntry"}},
+              "links": {"type": "array", "items": {"$ref": "#/$defs/link"}},
+              "hypotheses": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/hypothesis"}},
+              "gaps": {"description": "gaps that matter: those hypotheses depend on plus gaps of the incident's sources within an hour of its window", "type": "array", "items": {"type": "string"}},
+              "gaps_hypotheses_depend_on": {"type": "array", "items": {"type": "string"}}
+            }
+          }
+        }
+      }
+    },
+    "correlations.json": {
+      "type": "object",
+      "required": ["link_types", "nodes", "edges"],
+      "properties": {
+        "link_types": {"description": "one-line definition per link_type used on edges", "type": "object", "required": ["causal", "temporal", "attribution"], "additionalProperties": {"type": "string"}},
+        "nodes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "kind"],
+            "properties": {
+              "id": {"type": "string"}, "kind": {"enum": ["event", "user", "host", "ip", "resource"]},
+              "source": {"$ref": "#/$defs/source"}, "action": {"type": "string"}, "at_utc": {"$ref": "#/$defs/utc"},
+              "incident_ids": {"type": "array", "items": {"type": "string"}}
+            }
+          }
+        },
+        "edges": {
+          "description": "attribution: event->entity (relation actor|target|address, evidence record_field, event_ids = [the event]) and entity->entity from one audit record (relation = the operation, evidence audit_actor_target); these only say a record names the entity. causal and temporal: event->event only, copied from incident links (relation = the explicit evidence type or 'sequence', with evidence_value, incident_id and text); causal needs same_session|same_request|same_process|parent_id, temporal uses time_order. No edge touching an entity is ever causal. Every edge has at least one event id.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["edge_id", "from", "to", "relation", "link_type", "evidence_type", "event_ids"],
+            "properties": {
+              "edge_id": {"type": "string", "pattern": "^edge-[0-9a-f]{12}$"},
+              "from": {"type": "string"}, "to": {"type": "string"}, "relation": {"type": "string"},
+              "link_type": {"enum": ["causal", "temporal", "attribution"]},
+              "evidence_type": {"enum": ["same_session", "same_request", "same_process", "parent_id", "record_field", "audit_actor_target", "time_order"]},
+              "evidence_value": {"type": ["string", "null"]},
+              "event_ids": {"$ref": "#/$defs/nonEmptyEventIds"},
+              "incident_id": {"type": "string"}, "text": {"type": "string"}
+            },
+            "allOf": [
+              {"if": {"properties": {"link_type": {"const": "attribution"}}}, "then": {"properties": {"evidence_type": {"enum": ["record_field", "audit_actor_target"]}, "event_ids": {"maxItems": 1}}}},
+              {"if": {"properties": {"link_type": {"const": "causal"}}}, "then": {"required": ["incident_id", "text", "evidence_value"], "properties": {"evidence_type": {"enum": ["same_session", "same_request", "same_process", "parent_id"]}, "from": {"$ref": "#/$defs/eventId"}, "to": {"$ref": "#/$defs/eventId"}}}},
+              {"if": {"properties": {"link_type": {"const": "temporal"}}}, "then": {"required": ["incident_id", "text"], "properties": {"evidence_type": {"const": "time_order"}, "from": {"$ref": "#/$defs/eventId"}, "to": {"$ref": "#/$defs/eventId"}}}}
+            ]
+          }
+        }
+      }
+    },
+    "gaps.json": {
+      "type": "object",
+      "required": ["silence_threshold_minutes", "gaps"],
+      "properties": {
+        "silence_threshold_minutes": {"type": "integer"},
+        "gaps": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["gap_id", "kind", "source", "batch", "start_utc", "end_utc", "duration_minutes", "reason", "affected_entities", "bounding_event_ids", "events_inside_window", "incident_ids", "hypothesis_refs"],
+            "properties": {
+              "gap_id": {"type": "string", "pattern": "^gap-[0-9a-f]{10}$"},
+              "kind": {"description": "declared: listed in a batch manifest; silent: no records longer than the threshold inside declared coverage", "enum": ["declared", "silent"]},
+              "source": {"$ref": "#/$defs/source"}, "batch": {"type": "string"},
+              "start_utc": {"$ref": "#/$defs/utc"}, "end_utc": {"$ref": "#/$defs/utc"}, "duration_minutes": {"type": "integer"},
+              "reason": {"type": "string"},
+              "affected_entities": {"description": "entities seen in the same source within two hours of the gap", "type": "array", "items": {"$ref": "#/$defs/entity"}},
+              "bounding_event_ids": {"description": "the real last event before and first event after the gap; never synthesized", "$ref": "#/$defs/eventIds"},
+              "events_inside_window": {"description": "0 with correction on; can be non-zero with correction off when skewed times fall inside a declared gap", "type": "integer"},
+              "incident_ids": {"type": "array", "items": {"type": "string"}},
+              "hypothesis_refs": {"description": "'<incident_id>/<hypothesis_id>' of hypotheses depending on this gap", "type": "array", "items": {"type": "string"}}
+            }
+          }
+        }
+      }
+    },
+    "detector_metrics.json": {
+      "type": "object",
+      "required": ["synthetic", "disclaimer", "scoring", "labels_status", "labels_file", "labels_sha256", "held_out", "development", "background_detections", "thresholds", "tuning", "detector_techniques"],
+      "properties": {
+        "synthetic": {"const": true},
+        "disclaimer": {"type": "string"},
+        "scoring": {"type": "string"},
+        "labels_status": {"enum": ["loaded", "unavailable"]},
+        "labels_file": {"type": "string"},
+        "labels_sha256": {"anyOf": [{"$ref": "#/$defs/sha"}, {"type": "null"}]},
+        "held_out": {"description": "the headline numbers; null when labels are unavailable", "$ref": "#/$defs/metricsBlock"},
+        "development": {"description": "tuning data, reported separately and never as an estimate", "$ref": "#/$defs/metricsBlock"},
+        "background_detections": {"type": ["object", "null"]},
+        "thresholds": {"type": "object"}, "tuning": {"type": "object"}, "detector_techniques": {"type": "object"}
+      }
+    },
+    "replay.json": {
+      "type": "object",
+      "required": ["simulate_restart_after", "mode", "restart", "comparison", "output_hashes", "manifest_sha256", "note"],
+      "properties": {
+        "simulate_restart_after": {"type": "integer"},
+        "mode": {"enum": ["uninterrupted", "restart"]},
+        "restart": {
+          "type": ["object", "null"],
+          "required": ["stopped_after_batch", "checkpoint_sha256", "state_sha256_before_stop", "state_sha256_after_reload", "state_matches_checkpoint", "reingest_of_last_batch_was_noop", "batches_after_resume"]
+        },
+        "comparison": {
+          "type": ["object", "null"],
+          "required": ["against", "identical", "differing_files", "uninterrupted_output_hashes"],
+          "properties": {"identical": {"type": "boolean"}, "differing_files": {"type": "array", "items": {"type": "string"}}}
+        },
+        "output_hashes": {"description": "sha256 of every evidence file (all outputs except manifest.json and replay.json)", "type": "object", "additionalProperties": {"$ref": "#/$defs/sha"}},
+        "manifest_sha256": {"$ref": "#/$defs/sha"},
+        "note": {"type": "string"}
+      }
+    },
+    "checkpoint.json": {
+      "type": "object",
+      "required": ["batches_ingested", "events", "quarantined", "event_ids_sha256", "high_water_utc", "per_batch", "state_sha256", "note"],
+      "properties": {
+        "batches_ingested": {"type": "array", "items": {"type": "string"}},
+        "events": {"type": "integer"}, "quarantined": {"type": "integer"},
+        "event_ids_sha256": {"$ref": "#/$defs/sha"},
+        "high_water_utc": {"type": "object", "additionalProperties": {"$ref": "#/$defs/utc"}},
+        "per_batch": {"type": "array", "items": {"type": "object", "required": ["after_batch", "events_total", "quarantined_total", "state_sha256"]}},
+        "state_sha256": {"$ref": "#/$defs/sha"},
+        "note": {"type": "string"}
+      }
+    },
+    "summary.json": {
+      "type": "object",
+      "required": ["synthetic", "batches", "clock_skew_correction", "counts", "incidents_by_severity", "incidents", "gaps", "held_out_metrics", "headline", "statement"],
+      "properties": {
+        "synthetic": {"const": true},
+        "batches": {"type": "array", "items": {"type": "string"}},
+        "clock_skew_correction": {"enum": ["on", "off"]},
+        "counts": {"type": "object", "required": ["records_received", "events", "quarantined", "duplicates_exact", "duplicates_redelivered", "out_of_order", "detections", "incidents", "gaps", "entities"]},
+        "incidents_by_severity": {"type": "object", "required": ["critical", "high", "medium", "low"]},
+        "incidents": {"type": "array", "items": {"type": "object", "required": ["incident_id", "title", "severity", "event_ids", "gaps"]}},
+        "gaps": {"type": "array", "items": {"type": "object", "required": ["gap_id", "kind", "source", "start_utc", "end_utc"]}},
+        "held_out_metrics": {"anyOf": [{"$ref": "#/$defs/metricCounts"}, {"type": "null"}]},
+        "headline": {"type": "string"},
+        "statement": {"description": "names the gaps and states that data, labels and metrics are synthetic", "type": "string"}
+      }
+    },
+    "checks.json": {
+      "type": "object",
+      "required": ["passed", "checks", "evidence_hashes"],
+      "properties": {
+        "passed": {"type": "boolean"},
+        "checks": {
+          "type": "array",
+          "items": {"type": "object", "additionalProperties": false, "required": ["check", "passed", "description", "problems", "problem_count"],
+                    "properties": {"check": {"type": "string"}, "passed": {"type": "boolean"}, "description": {"type": "string"}, "problems": {"type": "array", "items": {"type": "string"}}, "problem_count": {"type": "integer"}}}
+        },
+        "evidence_hashes": {"type": "object", "additionalProperties": {"$ref": "#/$defs/sha"}}
+      }
+    }
+  }
+}

@@ -1,0 +1,57 @@
+{
+  "batch": "2026-10-16",
+  "declared_gaps": [],
+  "notes": "declared_clock_offset_seconds is the source clock minus true UTC; the corrected time is the parsed time minus the offset. Coverage and declared gaps are in true UTC.",
+  "organisation": "Fernhollow Cooperative (fictional)",
+  "sources": [
+    {
+      "coverage": [
+        "2026-10-16T00:00:00Z",
+        "2026-10-17T00:00:00Z"
+      ],
+      "declared_clock_offset_seconds": 0,
+      "file": "idp_signin.jsonl",
+      "format": "jsonl",
+      "name": "idp_signin",
+      "timestamp_format": "iso8601",
+      "timezone": "+00:00"
+    },
+    {
+      "coverage": [
+        "2026-10-16T00:00:00Z",
+        "2026-10-17T00:00:00Z"
+      ],
+      "declared_clock_offset_seconds": 0,
+      "file": "cloud_audit.json",
+      "format": "json",
+      "name": "cloud_audit",
+      "timestamp_format": "iso8601",
+      "timezone": "+00:00"
+    },
+    {
+      "coverage": [
+        "2026-10-16T00:00:00Z",
+        "2026-10-17T00:00:00Z"
+      ],
+      "declared_clock_offset_seconds": 420,
+      "file": "host_auth.log",
+      "format": "syslog",
+      "name": "host_auth",
+      "timestamp_format": "rfc3164",
+      "timezone": "+02:00"
+    },
+    {
+      "coverage": [
+        "2026-10-16T00:00:00Z",
+        "2026-10-17T00:00:00Z"
+      ],
+      "declared_clock_offset_seconds": 0,
+      "file": "resource_access.csv",
+      "format": "csv",
+      "name": "resource_access",
+      "timestamp_format": "epoch_ms",
+      "timezone": "+00:00"
+    }
+  ],
+  "synthetic": true
+}

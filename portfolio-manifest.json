@@ -1,0 +1,35 @@
+{
+  "schema_version": "1.0",
+  "name": "Incident Loom",
+  "short_description": "A replayable security-log investigation workspace: append-only synthetic batches normalized and de-duplicated, correlation rules, incidents whose every claim links to source events, hypotheses with alternatives, and gaps that lower confidence instead of hiding.",
+  "repository_url": "https://github.com/mrrishit909/incident-loom",
+  "live_url": "https://mrrishit909.github.io/incident-loom/",
+  "preview_image": "https://mrrishit909.github.io/incident-loom/preview.jpg",
+  "tags": ["security", "detection-engineering", "log-analysis", "incident-investigation", "python", "pandas", "github-actions", "react", "typescript"],
+  "capabilities": [
+    "Four log formats (JSON lines, nested JSON, syslog-like text, CSV) normalized to one event schema with source line or pointer",
+    "Deduplication of exact and re-delivered copies, out-of-order flags, declared clock-skew correction, quarantine with reasons",
+    "Eight correlation rules with documented thresholds; incidents with evidence-linked timelines",
+    "Causal links only with a shared session, request, process or parent id; time order is worded as sequence",
+    "Hypotheses with supporting, contradicting and missing evidence, and alternative explanations",
+    "Declared and silent log gaps recorded and used to lower confidence",
+    "Held-out detector precision and recall on labelled synthetic scenarios; checkpointed restart with byte-identical replay",
+    "GitHub-native run ledger, outcome loop and memory curation"
+  ],
+  "data_limitations": [
+    "All batches are synthetic logs of a fictional organisation",
+    "Held-out metrics use labels written by the same author as the detectors; they show the evaluation works, not real-world accuracy",
+    "No response actions; nothing touches a real system",
+    "The site shows a snapshot of the state branch, not live data"
+  ],
+  "integration": {
+    "standalone": "https://mrrishit909.github.io/incident-loom/",
+    "iframe": "https://mrrishit909.github.io/incident-loom/#/",
+    "module": "https://mrrishit909.github.io/incident-loom/lib/incident-loom.js",
+    "stylesheet": "https://mrrishit909.github.io/incident-loom/lib/incident-loom.css",
+    "entry_point": "IncidentLoomApp (React component) or mount(element, config)",
+    "data_url": "https://mrrishit909.github.io/incident-loom/data/",
+    "docs": "https://github.com/mrrishit909/incident-loom/blob/main/docs/PORTFOLIO_INTEGRATION.md"
+  },
+  "build_version": "1.0.0"
+}

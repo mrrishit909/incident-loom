@@ -1,0 +1,88 @@
+{
+  "distances_km": {
+    "BR|CA": 7300,
+    "BR|DE": 9600,
+    "BR|IN": 14100,
+    "BR|JP": 17400,
+    "BR|NL": 9200,
+    "BR|US": 6800,
+    "CA|DE": 6100,
+    "CA|IN": 11300,
+    "CA|JP": 10300,
+    "CA|NL": 5650,
+    "CA|US": 740,
+    "DE|IN": 5800,
+    "DE|JP": 8900,
+    "DE|NL": 580,
+    "DE|US": 6700,
+    "IN|JP": 5850,
+    "IN|NL": 6350,
+    "IN|US": 12000,
+    "JP|NL": 9300,
+    "JP|US": 10900,
+    "NL|US": 6200
+  },
+  "networks": [
+    {
+      "cidr": "192.0.2.0/25",
+      "country": "CA",
+      "label": "Fernhollow office and staff addresses"
+    },
+    {
+      "cidr": "192.0.2.128/25",
+      "country": "CA",
+      "label": "Fernhollow VPN pool"
+    },
+    {
+      "cidr": "198.51.100.0/26",
+      "country": "US",
+      "label": "content delivery network"
+    },
+    {
+      "cidr": "198.51.100.64/26",
+      "country": "DE",
+      "label": "residential ISP"
+    },
+    {
+      "cidr": "198.51.100.128/26",
+      "country": "NL",
+      "label": "hosting provider"
+    },
+    {
+      "cidr": "198.51.100.192/26",
+      "country": "IN",
+      "label": "hosting provider"
+    },
+    {
+      "cidr": "203.0.113.0/26",
+      "country": "BR",
+      "label": "residential ISP"
+    },
+    {
+      "cidr": "203.0.113.64/26",
+      "country": "JP",
+      "label": "mobile carrier"
+    },
+    {
+      "cidr": "203.0.113.128/26",
+      "country": "DE",
+      "label": "hosting provider"
+    },
+    {
+      "cidr": "203.0.113.192/26",
+      "country": "US",
+      "label": "hosting provider"
+    },
+    {
+      "cidr": "2001:db8::/33",
+      "country": "CA",
+      "label": "Fernhollow IPv6 office range"
+    },
+    {
+      "cidr": "2001:db8:8000::/33",
+      "country": "JP",
+      "label": "mobile carrier IPv6"
+    }
+  ],
+  "note": "Synthetic IP-to-country table for documentation address ranges only. It is not a real geolocation database; distances are rough synthetic figures in kilometres."
+}

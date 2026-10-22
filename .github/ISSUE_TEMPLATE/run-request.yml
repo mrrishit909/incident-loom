@@ -1,0 +1,36 @@
+name: Investigation run request
+description: Replay the committed synthetic event batches. Runs start automatically only for the repository owner; other requests wait for owner approval.
+title: "[investigation] "
+labels: ["type:run"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Runs read committed synthetic event batches only (no uploads, no real systems), are validated against `schemas/request.schema.json`, and never execute anything against real infrastructure. A GitHub sign-in is required to open an issue. Nothing here can trigger paid AI inference.
+  - type: checkboxes
+    attributes:
+      label: Event batches
+      description: Batches are append-only days; pick a contiguous run starting at 2026-10-13.
+      options:
+        - label: 2026-10-13
+        - label: 2026-10-14
+        - label: 2026-10-15
+        - label: 2026-10-16
+        - label: 2026-10-17
+        - label: 2026-10-18
+  - type: dropdown
+    attributes:
+      label: Clock-skew correction
+      description: on applies each source's declared clock offset; off keeps raw timestamps so you can see what skew does to the timeline.
+      options: ["on", "off"]
+      default: 0
+    validations:
+      required: true
+  - type: dropdown
+    attributes:
+      label: Simulate a restart after batch
+      description: 0 runs straight through; N stops after batch N, drops in-memory state, resumes from the checkpoint and must reproduce the same outputs.
+      options: ["0", "1", "2", "3", "4", "5"]
+      default: 0
+    validations:
+      required: true

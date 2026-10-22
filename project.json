@@ -1,0 +1,67 @@
+{
+  "project": "incident-loom",
+  "display_name": "Incident Loom",
+  "owner": "mrrishit909",
+  "repo": "incident-loom",
+  "pages_url": "https://mrrishit909.github.io/incident-loom/",
+  "schema_version": "1.0",
+  "package": "incidentloom",
+  "state_branch": "state",
+  "engine_paths": [
+    "src",
+    "fixtures",
+    "uv.lock"
+  ],
+  "default_branch": "main",
+  "limits": {
+    "max_runs_per_month": 40,
+    "max_open_requests": 5,
+    "max_run_bytes": 2000000,
+    "max_retained_run_dirs": 30,
+    "max_index_entries": 500,
+    "max_snapshot_runs": 8,
+    "compute_timeout_minutes": 15,
+    "stale_running_minutes": 90,
+    "max_repair_rounds": 3,
+    "inference_budget_usd": 1.0,
+    "max_reconcile_actions": 5
+  },
+  "form": [
+    {
+      "label": "Event batches",
+      "param": "batches",
+      "type": "checkbox_list",
+      "choices": {
+        "2026-10-13": "2026-10-13",
+        "2026-10-14": "2026-10-14",
+        "2026-10-15": "2026-10-15",
+        "2026-10-16": "2026-10-16",
+        "2026-10-17": "2026-10-17",
+        "2026-10-18": "2026-10-18"
+      }
+    },
+    {
+      "label": "Clock-skew correction",
+      "param": "clock_skew_correction",
+      "type": "str"
+    },
+    {
+      "label": "Simulate a restart after batch",
+      "param": "simulate_restart_after",
+      "type": "int"
+    }
+  ],
+  "constants": {},
+  "scheduled_request": {
+    "batches": [
+      "2026-10-13",
+      "2026-10-14",
+      "2026-10-15",
+      "2026-10-16",
+      "2026-10-17",
+      "2026-10-18"
+    ],
+    "clock_skew_correction": "on",
+    "simulate_restart_after": 0
+  }
+}
