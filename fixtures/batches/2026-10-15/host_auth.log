@@ -1,0 +1,56 @@
+Oct 15 02:25:29 fh-web-01 CRON[20198]: (root) CMD (/usr/local/bin/rotate-logs)
+Oct 15 02:52:56 fh-db-01 sshd[52032]: Accepted publickey for piet.morrow from 192.0.2.33 port 41348 ssh2
+Oct 15 02:53:26 fh-db-01 sudo[52035]: piet.morrow : PPID=52032 ; USER=root ; COMMAND=/usr/bin/systemctl status nginx
+Oct 15 02:55:56 fh-db-01 sshd[52032]: session closed for user piet.morrow
+Oct 15 03:48:26 fh-build-01 sshd[50716]: Accepted publickey for svc-backup from 192.0.2.41 port 56014 ssh2
+Oct 15 03:51:26 fh-build-01 sshd[50716]: session closed for user svc-backup
+Oct 15 04:56:02 fh-bastion-01 sshd[26030]: Accepted publickey for piet.morrow from 192.0.2.33 port 58494 ssh2
+Oct 15 04:56:32 fh-bastion-01 sudo[26033]: piet.morrow : PPID=26030 ; USER=root ; COMMAND=/usr/bin/systemctl status nginx
+Oct 15 04:56:32 fh-bastion-01 sudo[26033]: piet.morrow : PPID=26030 ; USER=root ; COMMAND=/usr/bin/systemctl status nginx
+Oct 15 04:59:02 fh-bastion-01 sshd[26030]: session closed for user piet.morrow
+Oct 15 04:59:02 fh-bastion-01 sshd[26030]: session closed for user piet.morrow
+Oct 15 05:48:03 fh-web-01 sshd[27678]: Accepted publickey for svc-backup from 192.0.2.41 port 62890 ssh2
+Oct 15 05:51:03 fh-web-01 sshd[27678]: session closed for user svc-backup
+Oct 15 06:41:24 fh-db-01 CRON[21214]: (root) CMD (/usr/local/bin/rotate-logs)
+Oct 15 07:27:28 fh-build-01 CRON[25347]: (root) CMD (/usr/local/bin/rotate-logs)
+Oct 15 08:27:53 fh-web-01 CRON[45062]: (root) CMD (/usr/local/bin/rotate-logs)
+Oct 15 09:36:12 fh-build-01 CRON[29588]: (root) CMD (/usr/local/bin/rotate-logs)
+Oct 15 10:39:54 fh-build-01 CRON[50118]: (root) CMD (/usr/local/bin/rotate-logs)
+Oct 15 11:35:33 fh-build-01 sshd[46930]: Accepted publickey for piet.morrow from 192.0.2.33 port 53847 ssh2
+Oct 15 11:36:03 fh-build-01 sudo[46933]: piet.morrow : PPID=46930 ; USER=root ; COMMAND=/usr/bin/systemctl status nginx
+Oct 15 11:37:33 fh-build-01 sshd[46930]: session closed for user piet.morrow
+Oct 15 12:11:25 fh-db-01 sshd[21320]: Accepted publickey for piet.morrow from 192.0.2.33 port 63712 ssh2
+Oct 15 12:11:55 fh-db-01 sudo[21323]: piet.morrow : PPID=21320 ; USER=root ; COMMAND=/usr/bin/systemctl status nginx
+Oct 15 12:14:25 fh-db-01 sshd[21320]: session closed for user piet.morrow
+Oct 15 12:23:50 fh-web-02 CRON[33738]: (root) CMD (/usr/local/bin/rotate-logs)
+Oct 15 13:39:44 fh-build-01 CRON[21915]: (root) CMD (/usr/local/bin/rotate-logs)
+Oct 15 14:01:15 fh-web-01 CRON[52256]: (root) CMD (/usr/local/bin/rotate-logs)
+Oct 15 15:13:25 fh-db-01 sshd[31567]: Accepted publickey for svc-backup from 192.0.2.41 port 49167 ssh2
+Oct 15 15:15:25 fh-db-01 sshd[31567]: session closed for user svc-backup
+Oct 15 16:02:47 fh-bastion-01 CRON[49389]: (root) CMD (/usr/local/bin/rotate-logs)
+Oct 15 16:50:01 fh-web-02 sshd[27539]: Accepted publickey for piet.morrow from 192.0.2.33 port 61545 ssh2
+Oct 15 16:50:31 fh-web-02 sudo[27542]: piet.morrow : PPID=27539 ; USER=root ; COMMAND=/usr/bin/systemctl status nginx
+Oct 15 16:52:01 fh-web-02 sshd[27539]: session closed for user piet.morrow
+Oct 15 17:37:50 fh-db-01 CRON[54214]: (root) CMD (/usr/local/bin/rotate-logs)
+Oct 15 18:53:01 fh-web-01 sshd[52842]: Accepted publickey for piet.morrow from 192.0.2.33 port 49664 ssh2
+Oct 15 18:53:31 fh-web-01 sudo[52845]: piet.morrow : PPID=52842 ; USER=root ; COMMAND=/usr/bin/systemctl status nginx
+Oct 15 18:55:01 fh-web-01 sshd[52842]: session closed for user piet.morrow
+Oct 15 19:43:39 fh-web-02 sshd[31581]: Accepted publickey for piet.morrow from 192.0.2.33 port 63586 ssh2
+Oct 15 19:44:09 fh-web-02 sudo[31584]: piet.morrow : PPID=31581 ; USER=root ; COMMAND=/usr/bin/systemctl status nginx
+Oct 15 19:46:39 fh-web-02 sshd[31581]: session closed for user piet.morrow
+Oct 15 20:41:40 fh-db-01 sshd[26848]: Accepted publickey for svc-backup from 192.0.2.41 port 59699 ssh2
+Oct 15 20:44:40 fh-db-01 sshd[26848]: session closed for user svc-backup
+Oct 15 21:14:07 fh-build-01 sshd[31881]: Accepted publickey for piet.morrow from 192.0.2.33 port 52465 ssh2
+Oct 15 21:14:37 fh-build-01 sudo[31884]: piet.morrow : PPID=31881 ; USER=root ; COMMAND=/usr/bin/systemctl status nginx
+Oct 15 21:17:07 fh-build-01 sshd[31881]: session closed for user piet.morrow
+Oct 15 22:28:51 fh-build-01 CRON[43818]: (root) CMD (/usr/local/bin/rotate-logs)
+Oct 15 22:42:47 fh-web-01 CRON[43983]: (root) CMD (/usr/local/bin/rotate-logs)
+Oct 15 23:08:51 fh-bastion-01 CRON[22275]: (root) CMD (/usr/local/bin/rotate-logs)
+Oct 16 00:09:45 fh-db-01 sshd[36451]: Accepted publickey for svc-backup from 192.0.2.41 port 44936 ssh2
+Oct 16 00:11:45 fh-db-01 sshd[36451]: session closed for user svc-backup
+Oct 16 00:32:19 fh-bastion-01 sshd[35333]: Accepted publickey for piet.morrow from 192.0.2.33 port 57038 ssh2
+Oct 16 00:32:49 fh-bastion-01 sudo[35336]: piet.morrow : PPID=35333 ; USER=root ; COMMAND=/usr/bin/systemctl status nginx
+Oct 16 00:34:19 fh-bastion-01 sshd[35333]: session closed for user piet.morrow
+Oct 16 01:27:17 fh-web-01 sshd[44131]: Accepted publickey for piet.morrow from 192.0.2.33 port 51166 ssh2
+Oct 16 01:27:47 fh-web-01 sudo[44134]: piet.morrow : PPID=44131 ; USER=root ; COMMAND=/usr/bin/systemctl status nginx
+Oct 16 01:30:17 fh-web-01 sshd[44131]: session closed for user piet.morrow

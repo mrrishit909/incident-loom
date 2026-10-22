@@ -14,9 +14,9 @@ frontend/public/data/
 frontend/test-results/
 frontend/playwright-report/
 *.log
+!fixtures/batches/*/*.log
 .DS_Store
 .env
 .env.*
-frontend/.qa/
 frontend/.qa/
 cache/
